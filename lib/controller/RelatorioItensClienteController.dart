@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tcc_3/model/Empresa.dart';
 import 'package:tcc_3/model/ItemPedidoVenda.dart';
 import 'package:tcc_3/model/PedidoVenda.dart';
-import 'package:sortedmap/sortedmap.dart';
 import 'package:tcc_3/model/Produto.dart';
 
 class RelatorioItensClienteController {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_full_pdf_viewer/full_pdf_viewer_scaffold.dart';
+import 'package:share_extend/share_extend.dart';
 
 class PdfViewerPage extends StatelessWidget {
   final String path;
@@ -8,6 +9,18 @@ class PdfViewerPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PDFViewerScaffold(
+      appBar: AppBar(
+        title: Text("Visualizar Relatório"),
+        centerTitle: true,
+        actions: <Widget>[
+          IconButton(
+              icon: Icon(Icons.share),
+              onPressed: () async {
+                ShareExtend.share(path, "file",
+                    sharePanelTitle: "Enviar PDF", subject: "Relatório");
+              })
+        ],
+      ),
       path: path,
     );
   }
