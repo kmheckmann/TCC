@@ -67,7 +67,7 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
       _controllerVendedor.text = pedidoVenda.user.getNome;
       _dropdownValueTipoPgto = pedidoVenda.tipoPagamento;
       _dropdownValueTipoPedido = pedidoVenda.tipoPedido;
-      _dropdownValueFornecedor = pedidoVenda.empresa.nomeFantasia;
+      _dropdownValueFornecedor = pedidoVenda.empresa.razaoSocial;
       _controllerVlTotalDesc.text = pedidoVenda.valorComDesconto.toString();
       _novocadastro = false;
       _vlCheckBox = pedidoVenda.pedidoFinalizado;
@@ -122,45 +122,8 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
           backgroundColor: Colors.blue,
           onPressed: () async {
             await _controllerEmpresa
-                .obterEmpresaPorDescricao(_dropdownValueFornecedor);
-            empresa = _controllerEmpresa.empresa;
-            await _controllerUsuario.obterUsuarioPorCPF(vendedor.getCPF);
-            vendedor = _controllerUsuario.usuario;
-            pedidoVenda.pedidoFinalizado = _vlCheckBox;
-
-            if (pedidoVenda.pedidoFinalizado == true &&
-                pedidoVenda.dataFinalPedido == null) {
-              await _controllerPedido.verificarSePedidoTemItens(pedidoVenda);
-
-              if (_controllerPedido.podeFinalizar == true) {
-                await _controllerEstoque
-                    .verificarEstoqueTodosItensPedido(pedidoVenda);
-                print("aqui 3");
-                print(_controllerEstoque.permitirFinalizarPedidoVenda);
-                if (_controllerEstoque.permitirFinalizarPedidoVenda == true) {
-                  _controllerEstoque.descontarEstoqueProduto(pedidoVenda);
-                  pedidoVenda.dataFinalPedido = DateTime.now();
-                  _controllerDataFinal.text =
-                      _formatarData(pedidoVenda.dataFinalPedido);
-                  _codigoBotaoSalvar();
-                } else {
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return _alertaEstoque();
-                      });
-                }
-              } else {
-                _scaffold.currentState.showSnackBar(SnackBar(
-                  content: Text(
-                      "O pedido não pode ser finalizado pois não contém itens!"),
-                  backgroundColor: Colors.red,
-                  duration: Duration(seconds: 5),
-                ));
-              }
-            } else {
-              _codigoBotaoSalvar();
-            }
+                .obterEmpresaPorDescricao(_dropdownValueFornecedor)
+                .whenComplete(() => _validacoes());
           }),
       body: Form(
           key: _validadorCampos,
@@ -329,7 +292,42 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
     );
   }
 
+  void _validacoes() async {
+    pedidoVenda.pedidoFinalizado = _vlCheckBox;
+    if (pedidoVenda.pedidoFinalizado == true &&
+        pedidoVenda.dataFinalPedido == null) {
+      await _controllerPedido.verificarSePedidoTemItens(pedidoVenda);
+
+      if (_controllerPedido.podeFinalizar == true) {
+        await _controllerEstoque.verificarEstoqueTodosItensPedido(pedidoVenda);
+        if (_controllerEstoque.permitirFinalizarPedidoVenda == true) {
+          _controllerEstoque.descontarEstoqueProduto(pedidoVenda);
+          pedidoVenda.dataFinalPedido = DateTime.now();
+          _controllerDataFinal.text =
+              _formatarData(pedidoVenda.dataFinalPedido);
+          _codigoBotaoSalvar();
+        } else {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return _alertaEstoque();
+              });
+        }
+      } else {
+        _scaffold.currentState.showSnackBar(SnackBar(
+          content:
+              Text("O pedido não pode ser finalizado pois não contém itens!"),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 5),
+        ));
+      }
+    } else {
+      _codigoBotaoSalvar();
+    }
+  }
+
   void _codigoBotaoSalvar() async {
+    empresa = _controllerEmpresa.emp;
     // método criado para não precisar repetir duas vezes o mesmo codigo na hora que clica no salvar
     if (_dropdownValueTipoPgto != null &&
         _dropdownValueFornecedor != null &&

@@ -90,9 +90,7 @@ class UsuarioController extends Model {
         print(u.email);
         //Carrega os dados do usuario
         await _carregarDadosUsuario();
-        print(dadosUsuarioAtual["ativo"]);
         if (dadosUsuarioAtual["ativo"]) {
-          print(dadosUsuarioAtual["primeiroLogin"]);
           if (!dadosUsuarioAtual["primeiroLogin"]) {
             sucessoLogin();
           } else {
@@ -156,12 +154,16 @@ class UsuarioController extends Model {
 
     if (usuarioFirebase != null) {
       if (dadosUsuarioAtual["name"] == null) {
-        DocumentSnapshot docUsuario = await Firestore.instance
+        DocumentSnapshot docUsuario = await FirebaseFirestore.instance
             .collection("usuarios")
-            .document(usuarioFirebase.uid)
+            .doc(usuarioFirebase.uid)
             .get();
         dadosUsuarioAtual = docUsuario.data();
+        dadosUsuarioAtual["id"] = docUsuario.id;
+        dadosUsuarioAtual["primeiroLogin"] = docUsuario.data()["primeiroLogin"];
         dadosNovoUsuario = docUsuario.data();
+        dadosNovoUsuario["id"] = docUsuario.id;
+        dadosNovoUsuario["primeiroLogin"] = docUsuario.data()["primeiroLogin"];
       }
       notifyListeners();
     }
