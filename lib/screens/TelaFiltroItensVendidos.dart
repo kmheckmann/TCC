@@ -3,21 +3,28 @@ import 'package:flutter/material.dart';
 import 'package:tcc_3/Relatorios/Relatorio_Itens_Cliente.dart';
 import 'package:tcc_3/controller/EmpresaController.dart';
 import 'package:tcc_3/controller/RelatorioItensClienteController.dart';
+import 'package:tcc_3/controller/RelatorioItensVendidosController.dart';
 import 'package:tcc_3/model/Empresa.dart';
 
-class TelaFiltroItens_Cliente extends StatefulWidget {
+class TelaFiltroItensVendidos extends StatefulWidget {
+  final bool filtraCliente;
+  TelaFiltroItensVendidos(this.filtraCliente);
   @override
-  _TelaFiltroItens_ClienteState createState() =>
-      _TelaFiltroItens_ClienteState();
+  _TelaFiltroItensVendidosState createState() =>
+      _TelaFiltroItensVendidosState(this.filtraCliente);
 }
 
-class _TelaFiltroItens_ClienteState extends State<TelaFiltroItens_Cliente> {
+class _TelaFiltroItensVendidosState extends State<TelaFiltroItensVendidos> {
+  final bool filtraCliente;
+  _TelaFiltroItensVendidosState(this.filtraCliente);
   String _dropdownValueCliente;
   final _scaffold = GlobalKey<ScaffoldState>();
   final _controllerDataInicial = TextEditingController();
   final _controllerDataFinal = TextEditingController();
-  RelatorioItensClienteController _controllerRelatorio =
+  RelatorioItensClienteController _controllerRelatorioFiltraCliente =
       RelatorioItensClienteController();
+  RelatorioItensVendidosController _controllerRelatorioItensVendidos =
+      RelatorioItensVendidosController();
   EmpresaController _controllerEmpresa = EmpresaController();
   DateTime dataInicial;
   DateTime dataFinal;
@@ -33,39 +40,44 @@ class _TelaFiltroItens_ClienteState extends State<TelaFiltroItens_Cliente> {
       ),
       body: ListView(
         children: <Widget>[
-          _criarDropDownCliente(),
           _criarCampoData(context, "Data Inicial", _controllerDataInicial),
           _criarCampoData(context, "Data Final", _controllerDataFinal),
+          filtraCliente ? _criarDropDownCliente() : Container(),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.arrow_forward),
         backgroundColor: Theme.of(context).primaryColor,
         onPressed: () async {
-          if (_dropdownValueCliente == null ||
-              _controllerDataInicial.text.isEmpty ||
-              _controllerDataFinal.text.isEmpty) {
+          if (_dropdownValueCliente == null && filtraCliente) {
             _scaffold.currentState.showSnackBar(SnackBar(
-              content: Text("Informe todos os filtros!"),
+              content: Text("Informe o cliente!"),
               backgroundColor: Colors.red,
               duration: Duration(seconds: 5),
             ));
           } else {
-            await _controllerEmpresa
-                .obterEmpresaPorDescricao(_dropdownValueCliente);
-            empresa = _controllerEmpresa.emp;
-            if (dataInicial.isAfter(dataFinal) ||
-                dataFinal.isBefore(dataInicial)) {
+            if (_controllerDataInicial.text.isEmpty ||
+                _controllerDataFinal.text.isEmpty) {
               _scaffold.currentState.showSnackBar(SnackBar(
-                content: Text("Data inicial maior que data final!"),
+                content: Text("Informe todas as datas!"),
                 backgroundColor: Colors.red,
                 duration: Duration(seconds: 5),
               ));
             } else {
-              _controllerRelatorio.lista.add(['Item', 'Quantidade']);
-              _controllerRelatorio
-                  .obterPedidosRelatorio(empresa, dataInicial, dataFinal)
-                  .whenComplete(() => obterItens());
+              if (dataInicial.isAfter(dataFinal) ||
+                  dataFinal.isBefore(dataInicial)) {
+                _scaffold.currentState.showSnackBar(SnackBar(
+                  content: Text("Data inicial maior que data final!"),
+                  backgroundColor: Colors.red,
+                  duration: Duration(seconds: 5),
+                ));
+              } else {
+                if (filtraCliente) {
+                  _filtraPorCliente();
+                } else {
+                  _itensVendidos();
+                }
+              }
             }
           }
         },
@@ -73,28 +85,80 @@ class _TelaFiltroItens_ClienteState extends State<TelaFiltroItens_Cliente> {
     );
   }
 
+  void _filtraPorCliente() async {
+    await _controllerEmpresa.obterEmpresaPorDescricao(_dropdownValueCliente);
+    empresa = _controllerEmpresa.emp;
+    _controllerRelatorioFiltraCliente.lista.add(['Item', 'Quantidade']);
+    _controllerRelatorioFiltraCliente
+        .obterPedidosRelatorioPorCliente(empresa, dataInicial, dataFinal)
+        .whenComplete(() => obterItens());
+  }
+
+  void _itensVendidos() async {
+    _controllerRelatorioItensVendidos.lista.add(['Item', 'Quantidade']);
+    _controllerRelatorioItensVendidos
+        .obterPedidosRelatorio(dataInicial, dataFinal)
+        .whenComplete(() => obterItens());
+  }
+
   void obterItens() {
-    _controllerRelatorio
-        .itensRelatorio(_controllerRelatorio.pedidos)
-        .whenComplete(() => removerDuplicados());
+    if (filtraCliente) {
+      _controllerRelatorioFiltraCliente
+          .itensRelatorio(_controllerRelatorioFiltraCliente.pedidos)
+          .whenComplete(() => removerDuplicados());
+    } else {
+      _controllerRelatorioItensVendidos
+          .itensRelatorio(_controllerRelatorioItensVendidos.pedidos)
+          .whenComplete(() => removerDuplicados());
+    }
   }
 
   void removerDuplicados() {
-    _controllerRelatorio
-        .removerDuplicados(_controllerRelatorio.itensPedidoVenda);
-    obterLista();
+    if (filtraCliente) {
+      _controllerRelatorioFiltraCliente.removerDuplicados(
+          _controllerRelatorioFiltraCliente.itensPedidoVenda);
+      obterLista();
+    } else {
+      _controllerRelatorioItensVendidos.removerDuplicados(
+          _controllerRelatorioItensVendidos.itensPedidoVenda);
+      obterLista();
+    }
   }
 
   void obterLista() {
-    if (_controllerRelatorio.itensPedidoVenda.length != 0) {
-      _controllerRelatorio
-          .criarListaTabelaList(_controllerRelatorio.itensPedidoVendaAux);
-      reportView_Itens_Cliente(context, _dropdownValueCliente, dataInicial,
-          dataFinal, _controllerRelatorio.lista);
+    if (filtraCliente) {
+      if (_controllerRelatorioFiltraCliente.itensPedidoVenda.length != 0) {
+        _controllerRelatorioFiltraCliente.criarListaTabelaList(
+            _controllerRelatorioFiltraCliente.itensPedidoVendaAux);
+        reportView_Itens_Cliente(
+            context,
+            _dropdownValueCliente,
+            dataInicial,
+            dataFinal,
+            _controllerRelatorioFiltraCliente.lista,
+            "Relatório itens mais vendidos por cliente",
+            filtraCliente);
+      }
+      _controllerRelatorioFiltraCliente.lista.clear();
+      _controllerRelatorioFiltraCliente.itensPedidoVenda.clear();
+      _controllerRelatorioFiltraCliente.itensPedidoVendaAux.clear();
+    } else {
+      if (_controllerRelatorioItensVendidos.itensPedidoVenda.length != 0) {
+        _controllerRelatorioItensVendidos.criarListaTabelaList(
+            _controllerRelatorioItensVendidos.itensPedidoVendaAux);
+        reportView_Itens_Cliente(
+            context,
+            _dropdownValueCliente,
+            dataInicial,
+            dataFinal,
+            _controllerRelatorioItensVendidos.lista,
+            "Relatório itens mais vendidos",
+            filtraCliente);
+      }
+      _controllerRelatorioItensVendidos.lista.clear();
+      _controllerRelatorioItensVendidos.itensPedidoVenda.clear();
+      _controllerRelatorioItensVendidos.itensPedidoVendaAux.clear();
     }
-    _controllerRelatorio.lista.clear();
-    _controllerRelatorio.itensPedidoVenda.clear();
-    _controllerRelatorio.itensPedidoVendaAux.clear();
   }
 
   Widget _criarDropDownCliente() {
