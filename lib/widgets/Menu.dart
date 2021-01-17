@@ -83,7 +83,6 @@ class Menu extends StatelessWidget {
               _ehAdm ? BotaoMenu(Icons.people, "Usuários", pageController, 8) : Container(),
               BotaoMenu(Icons.assessment, "Consultas", pageController, 9),
               _ehAdm ? BotaoMenu(Icons.bubble_chart, "Categorias", pageController, 10) : Container(),
-              BotaoMenu(Icons.assessment, "Relatório", pageController, 11),
             ],
           )
         ],

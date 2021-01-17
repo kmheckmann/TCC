@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tcc_3/screens/PDFCreator.dart';
 import 'package:tcc_3/screens/TelaCategorias.dart';
 import 'package:tcc_3/screens/TelaCidades.dart';
 import 'package:tcc_3/screens/TelaConsultas.dart';
@@ -108,14 +107,6 @@ class HomeScreen extends StatelessWidget {
           ),
           drawer: Menu(_pageController),
           body: TelaCategorias(),
-        ),
-        Scaffold(
-          appBar: AppBar(
-            title: Text("PDF"),
-            centerTitle: true,
-          ),
-          drawer: Menu(_pageController),
-          body: PDFCreator(),
         ),
       ],
     );

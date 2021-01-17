@@ -1,9 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:tcc_3/controller/UsuarioController.dart';
-import 'package:tcc_3/model/Usuario.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tcc_3/screens/HomeScreen.dart';
 import 'package:tcc_3/screens/TelaTrocarSenha.dart';
 

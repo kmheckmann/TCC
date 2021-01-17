@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tcc_3/screens/PDFCreator.dart';
 import 'package:tcc_3/screens/TelaFiltroItens_Cliente.dart';
 
 class TelaConsultas extends StatefulWidget {
