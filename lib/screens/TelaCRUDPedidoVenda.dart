@@ -332,7 +332,7 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
     if (_dropdownValueTipoPgto != null &&
         _dropdownValueFornecedor != null &&
         _dropdownValueTipoPedido != null) {
-      Map<String, dynamic> mapa = pedidoVenda.converterParaMapa();
+      Map<String, dynamic> mapa = _controllerPedido.converterParaMapaPedidoVenda(pedidoVenda);
       Map<String, dynamic> mapaVendedor = Map();
       mapaVendedor["id"] = vendedor.getID;
       Map<String, dynamic> mapaEmpresa = Map();

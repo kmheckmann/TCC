@@ -24,23 +24,5 @@ class PedidoVenda extends Pedido {
     dataPedido = dataPedidoTimeStamp.toDate();
     if (dataFinalPedidoTimeStamp != null)
       dataFinalPedido = dataFinalPedidoTimeStamp.toDate();
-
-      print(dataPedido);
-  }
-
-  @override
-  Map<String, dynamic> converterParaMapa() {
-    return {
-      "valorTotal": valorTotal + 0.0,
-      "percentualDesconto": percentualDesconto + 0.0,
-      "tipoPagamento": tipoPagamento,
-      "ehPedidoVenda": ehPedidoVenda,
-      "tipoPedido": tipoPedido,
-      "dataPedido": dataPedido,
-      "pedidoFinalizado": pedidoFinalizado,
-      "dataFinalPedido": dataFinalPedido,
-      "label": labelTelaPedidos,
-      "valorComDesconto": valorComDesconto
-    };
   }
 }

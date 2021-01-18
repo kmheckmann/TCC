@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_3/screens/TelaFiltroItensVendidos.dart';
+import 'package:tcc_3/screens/TelaFiltroPedidosBonificacao.dart';
 
 class TelaConsultas extends StatefulWidget {
   @override
@@ -25,6 +26,13 @@ class _TelaConsultasState extends State<TelaConsultas> {
           onTap: () {
             Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => TelaFiltroItensVendidos(false)));
+          },
+        ),
+        InkWell(
+          child: _linhaNomeRelatorio("Custo pedidos de bonificação"),
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => TelaFiltroPedidosBonificacao()));
           },
         )
       ],

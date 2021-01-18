@@ -9,13 +9,14 @@ class PedidoVendaController extends PedidoController {
 
   PedidoVendaController();
 
-  Map<String, dynamic> converterParaMapa(Pedido p) {
+  Map<String, dynamic> converterParaMapaPedidoVenda(PedidoVenda p) {
     return {
       "valorTotal": p.valorTotal,
       "percentualDesconto": p.percentualDesconto,
       "tipoPagamento": p.tipoPagamento,
       "ehPedidoVenda": p.ehPedidoVenda,
       "dataPedido": p.dataPedido,
+      "tipoPedido": p.tipoPedido,
       "pedidoFinalizado": p.pedidoFinalizado,
       "label": p.labelTelaPedidos,
       "valorComDesconto": p.valorComDesconto,
