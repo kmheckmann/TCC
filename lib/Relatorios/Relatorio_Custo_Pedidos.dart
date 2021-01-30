@@ -5,8 +5,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart' as material;
 import 'package:tcc_3/acessorios/PDFViewerPage.dart';
 
-reportView_Pedidos_Bonificacao(
-    context, DateTime data1, DateTime data2, List<List<String>> lista) async {
+reportView_Custo_Pedidos(
+    context, DateTime data1, DateTime data2, List<List<String>> lista, String tipoPedido) async {
   final Document pdf = Document();
 
   pdf.addPage(MultiPage(
@@ -44,7 +44,7 @@ reportView_Pedidos_Bonificacao(
                 child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Text("Pedidos de Bonificação",
+                      Text("Pedidos de "+ tipoPedido,
                           textScaleFactor: 1, style: TextStyle(fontSize: 23.0)),
                     ])),
             Padding(padding: const EdgeInsets.all(3)),

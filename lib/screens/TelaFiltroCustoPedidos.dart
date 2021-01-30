@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:tcc_3/controller/RelatorioPedidosBonificacaoController.dart';
-import 'package:tcc_3/Relatorios/Relatorio_Pedidos_Bonificacao.dart';
+import 'package:tcc_3/controller/RelatorioCustoPedidosController.dart';
+import 'package:tcc_3/Relatorios/Relatorio_Custo_Pedidos.dart';
 
-class TelaFiltroPedidosBonificacao extends StatefulWidget {
-  TelaFiltroPedidosBonificacao();
+class TelaFiltroCustoPedidos extends StatefulWidget {
+  final String tipoPedido;
+  TelaFiltroCustoPedidos(this.tipoPedido);
+
   @override
-  _TelaFiltroPedidosBonificacaoState createState() =>
-      _TelaFiltroPedidosBonificacaoState();
+  _TelaFiltroCustoPedidosState createState() =>
+      _TelaFiltroCustoPedidosState(this.tipoPedido);
 }
 
-class _TelaFiltroPedidosBonificacaoState
-    extends State<TelaFiltroPedidosBonificacao> {
+class _TelaFiltroCustoPedidosState
+    extends State<TelaFiltroCustoPedidos> {
+  final String tipoPedido;
+
+  _TelaFiltroCustoPedidosState(this.tipoPedido);
   final _scaffold = GlobalKey<ScaffoldState>();
   final _controllerDataInicial = TextEditingController();
   final _controllerDataFinal = TextEditingController();
-  RelatorioPedidosBonificacaoController _controllerPedidos =
-      RelatorioPedidosBonificacaoController();
+  RelatorioCustoPedidosController _controllerPedidos =
+      RelatorioCustoPedidosController();
   DateTime dataInicial;
   DateTime dataFinal;
   DateTime currentDate = DateTime.now();
@@ -57,7 +62,7 @@ class _TelaFiltroPedidosBonificacaoState
               _controllerPedidos.lista
                   .add(['Pedido', 'Cliente', 'Valor Total (R\$)']);
               _controllerPedidos
-                  .obterPedidosBonificacao(dataInicial, dataFinal)
+                  .obterPedidosBonificacao(dataInicial, dataFinal, tipoPedido)
                   .whenComplete(() => obterLista());
             }
           }
@@ -68,8 +73,8 @@ class _TelaFiltroPedidosBonificacaoState
 
   void obterLista() {
     if (_controllerPedidos.lista.length != 0) {
-      reportView_Pedidos_Bonificacao(
-          context, dataInicial, dataFinal, _controllerPedidos.lista);
+      reportView_Custo_Pedidos(
+          context, dataInicial, dataFinal, _controllerPedidos.lista, tipoPedido);
       _controllerPedidos.lista.clear();
     }
   }
