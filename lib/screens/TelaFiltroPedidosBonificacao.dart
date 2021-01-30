@@ -55,7 +55,7 @@ class _TelaFiltroPedidosBonificacaoState
               ));
             } else {
               _controllerPedidos.lista
-                  .add(['Pedido', 'Cliente', 'Valor Total']);
+                  .add(['Pedido', 'Cliente', 'Valor Total (R\$)']);
               _controllerPedidos
                   .obterPedidosBonificacao(dataInicial, dataFinal)
                   .whenComplete(() => obterLista());
@@ -67,9 +67,7 @@ class _TelaFiltroPedidosBonificacaoState
   }
 
   void obterLista() {
-    print(_controllerPedidos.pedidos.length);
-    if (_controllerPedidos.pedidos.length != 0) {
-      _controllerPedidos.criarListaTabelaList(_controllerPedidos.pedidos);
+    if (_controllerPedidos.lista.length != 0) {
       reportView_Pedidos_Bonificacao(
           context, dataInicial, dataFinal, _controllerPedidos.lista);
       _controllerPedidos.lista.clear();
