@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:pdf/widgets.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart' as material;
-import 'package:tcc_3/screens/PDFViewerPage.dart';
+import 'package:tcc_3/acessorios/PDFViewerPage.dart';
 
 reportView_Itens_Cliente(context, String nomeCliente, DateTime data1,
-    DateTime data2, List<List<String>> lista) async {
+    DateTime data2, List<List<String>> lista,String nomeRelatorio, bool filtraCliente) async {
   final Document pdf = Document();
 
   pdf.addPage(MultiPage(
@@ -44,13 +44,14 @@ reportView_Itens_Cliente(context, String nomeCliente, DateTime data1,
                 child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Text('Relatório itens mais comprados por cliente',
+                      Text(nomeRelatorio,
                           textScaleFactor: 1, style: TextStyle(fontSize: 23.0)),
                     ])),
             Padding(padding: const EdgeInsets.all(3)),
+            filtraCliente ?
             Paragraph(
                 text: 'Cliente: ' + nomeCliente,
-                style: TextStyle(fontSize: 20.0)),
+                style: TextStyle(fontSize: 20.0)) : Paragraph(text: ""),
             Paragraph(
                 text: 'De: ' +
                     data1.day.toString() +

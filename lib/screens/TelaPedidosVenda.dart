@@ -22,7 +22,10 @@ class _TelaPedidosVendaState extends State<TelaPedidosVenda> {
 
   @override
   Widget build(BuildContext context) {
-    return ScopedModelDescendant<UsuarioController>(builder: (context, child, model) {
+    return ScopedModelDescendant<UsuarioController>(
+        builder: (context, child, model) {
+      u.setID = model.dadosUsuarioAtual["id"];
+      u.setPrimeiroLogin = model.dadosUsuarioAtual[["primeiroLogin"]];
       u.setNome = model.dadosUsuarioAtual["nome"];
       u.setEmail = model.dadosUsuarioAtual["email"];
       u.setCPF = model.dadosUsuarioAtual["cpf"];
@@ -38,14 +41,15 @@ class _TelaPedidosVendaState extends State<TelaPedidosVenda> {
               onPressed: () {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => TelaCRUDPedidoVenda(vendedor: u)));
+                setState(() {});
               }),
           body: FutureBuilder<QuerySnapshot>(
               //O sistema ira acessar o documento "pedidos" e buscar todos os pedidos marcados como pedidos de venda
-              future: Firestore.instance
+              future: FirebaseFirestore.instance
                   .collection("pedidos")
                   .where("ehPedidoVenda", isEqualTo: true)
-                  .orderBy("pedidoFinalizado",descending: true)
-                  .getDocuments(),
+                  .orderBy("pedidoFinalizado", descending: true)
+                  .get(),
               builder: (context, snapshot) {
                 //Como os dados serao buscados do firebase, pode ser que demore para obter
                 //entao, enquanto os dados nao sao obtidos sera apresentado um circulo na tela
@@ -63,8 +67,8 @@ class _TelaPedidosVendaState extends State<TelaPedidosVenda> {
                       itemBuilder: (context, index) {
                         PedidoVenda pedidoVenda = PedidoVenda.buscarFirebase(
                             snapshot.data.docs[index]);
-                        return _construirListaPedidos(context, pedidoVenda,
-                            snapshot.data.docs[index], u);
+                        return _construirListaPedidos(
+                            context, pedidoVenda, snapshot.data.docs[index], u);
                       });
               }),
         ),
