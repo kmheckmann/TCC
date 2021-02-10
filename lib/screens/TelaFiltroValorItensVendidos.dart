@@ -55,7 +55,6 @@ class _TelaFiltroValorItensVendidosState
                 duration: Duration(seconds: 5),
               ));
             } else {
-              _controllerRelatorio.lista.add(['Item', 'Valor (R\$)']);
               _controllerRelatorio
                   .obterPedidosRelatorio(dataInicial, dataFinal)
                   .whenComplete(() => obterItens());
@@ -79,6 +78,7 @@ class _TelaFiltroValorItensVendidosState
   }
 
   void obterLista() {
+    _controllerRelatorio.lista.add(['Item', 'Valor (R\$)']);
     if (_controllerRelatorio.itensPedidoVenda.length != 0) {
       _controllerRelatorio
           .criarListaTabelaList(_controllerRelatorio.itensPedidoVendaAux);

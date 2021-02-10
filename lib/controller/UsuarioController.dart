@@ -85,9 +85,7 @@ class UsuarioController extends Model {
         .then((usuario) async {
       User u = usuario.user;
 
-      print(u.email);
       if (u.emailVerified) {
-        print(u.email);
         //Carrega os dados do usuario
         await _carregarDadosUsuario();
         if (dadosUsuarioAtual["ativo"]) {
