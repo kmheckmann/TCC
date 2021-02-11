@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tcc_3/controller/EstoqueProdutoController.dart';
 import 'package:tcc_3/controller/ItemPedidoVendaController.dart';
 import 'package:tcc_3/controller/PedidoVendaController.dart';
@@ -98,7 +99,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
             padding: EdgeInsets.all(8.0),
             children: <Widget>[
               _campoProduto(),
-              _criarCampoTexto(_controllerPreco, "Preço", TextInputType.number),
+              _criarCampoTexto(_controllerPreco, "Preço", TextInputType.numberWithOptions(decimal: true)),
               _criarCampoTexto(
                   _controllerQtde, "Quantidade", TextInputType.number),
               _criarCampoQtdeExistente(),
@@ -183,6 +184,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
       TextEditingController _controller, String titulo, TextInputType tipo) {
     return TextFormField(
       controller: _controller,
+      inputFormatters: [FilteringTextInputFormatter.allow((RegExp(r'^(\d+)?\.?\d{0,2}')))],
       enabled: pedidoVenda.pedidoFinalizado ? false : true,
       keyboardType: tipo,
       decoration: InputDecoration(

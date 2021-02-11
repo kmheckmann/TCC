@@ -60,6 +60,8 @@ class PedidoCompraController extends PedidoController {
     if (p.valorTotal != 0 || p.valorTotal == 0) {
       double vlDesc = (p.percentualDesconto / 100) * p.valorTotal;
       pedidoCompra.valorComDesconto = (p.valorTotal - vlDesc);
+      pedidoCompra.valorComDesconto =
+          num.parse(pedidoCompra.valorComDesconto.toStringAsFixed(2));
     } else {
       //Exceção para o caso de o desconto ser informado antes do pedido ter algum valor
       pedidoCompra.valorComDesconto = 0;
@@ -72,6 +74,8 @@ class PedidoCompraController extends PedidoController {
     double valorTotalItem = novoItem.preco * novoItem.quantidade;
     p.valorTotal += valorTotalItem;
     pedidoCompra.valorTotal = p.valorTotal;
+    pedidoCompra.valorTotal =
+        num.parse(pedidoCompra.valorTotal.toStringAsFixed(2));
     calcularDesconto(p);
   }
 
