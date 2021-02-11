@@ -233,6 +233,4 @@ class UsuarioController extends Model {
     }
     return cpfValido;
   }
-
-  void desativarContausuario() {}
 }

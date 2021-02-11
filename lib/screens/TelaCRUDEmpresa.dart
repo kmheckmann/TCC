@@ -20,6 +20,7 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
   Empresa empresa;
   final DocumentSnapshot snapshot;
   bool _novocadastro;
+  bool _cnpjValido;
 
   _TelaCRUDEmpresaState(this.empresa, this.snapshot);
 
@@ -87,6 +88,9 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
             child: Icon(Icons.save),
             backgroundColor: Colors.blue,
             onPressed: () async {
+              if (_controllerCnpj.text.isNotEmpty) {
+                _cnpjValido = _controllerEmpresa.validarCNPJ(empresa.cnpj);
+              }
               //Ao clicar pra salvar realiza a verificação de CNPJ e Inscrição Estadual
               await _controllerEmpresa.verificarExistenciaEmpresa(
                   empresa, _novocadastro);
@@ -171,7 +175,7 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
                 !text.contains(".com")) return "E-mail inválido!";
           },
           onChanged: (texto) {
-            empresa.email = texto.toUpperCase();
+            empresa.email = texto.toLowerCase();
           },
         ));
   }
@@ -301,6 +305,8 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
               return "É necessário informar corretamente este campo!";
             if (_existeCadastroCNPJ)
               return "Já existe empresa com esse CNPJ, verifique!";
+            if (text.isNotEmpty && _cnpjValido == false)
+              return "CNPJ inválido!";
           },
           onChanged: (texto) {
             empresa.cnpj = texto.toUpperCase();

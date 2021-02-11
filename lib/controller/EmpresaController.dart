@@ -35,53 +35,54 @@ class EmpresaController {
       Map<String, dynamic> dadosCidade) async {
     this.dadosEmpresa = dadosEmpresa;
     this.dadosCidade = dadosCidade;
-    await Firestore.instance
+    await FirebaseFirestore.instance
         .collection("empresas")
-        .document(dadosEmpresa["cnpj"])
-        .setData(dadosEmpresa);
+        .doc(dadosEmpresa["cnpj"])
+        .set(dadosEmpresa);
 
-    await Firestore.instance
+    await FirebaseFirestore.instance
         .collection("empresas")
-        .document(dadosEmpresa["cnpj"])
+        .doc(dadosEmpresa["cnpj"])
         .collection("cidade")
-        .document("IDcidade")
-        .setData(dadosCidade);
+        .doc("IDcidade")
+        .set(dadosCidade);
   }
 
   Future<Null> editarEmpresa(Map<String, dynamic> dadosEmpresa,
       Map<String, dynamic> dadosCidade, String idFirebase) async {
     this.dadosEmpresa = dadosEmpresa;
     this.dadosCidade = dadosCidade;
-    await Firestore.instance
+    await FirebaseFirestore.instance
         .collection("empresas")
-        .document(idFirebase)
-        .setData(dadosEmpresa);
+        .doc(idFirebase)
+        .set(dadosEmpresa);
 
-    await Firestore.instance
+    await FirebaseFirestore.instance
         .collection("empresas")
-        .document(idFirebase)
+        .doc(idFirebase)
         .collection("cidade")
-        .document("IDcidade")
-        .setData(dadosCidade);
+        .doc("IDcidade")
+        .set(dadosCidade);
   }
 
   //Método para buscar os valores da cidade na subcoleção dentro da empresa
   Future<Null> obterCidadeEmpresa(String idEmpresa) async {
     Cidade c = Cidade();
-    CollectionReference ref = Firestore.instance
+    CollectionReference ref = FirebaseFirestore.instance
         .collection('empresas')
-        .document(idEmpresa)
+        .doc(idEmpresa)
         .collection('cidade');
-    QuerySnapshot obterCidadeDaEmpresa = await ref.getDocuments();
+    QuerySnapshot obterCidadeDaEmpresa = await ref.get();
 
-    CollectionReference refCidade = Firestore.instance.collection('cidades');
-    QuerySnapshot obterDadosCidade = await refCidade.getDocuments();
+    CollectionReference refCidade =
+        FirebaseFirestore.instance.collection('cidades');
+    QuerySnapshot obterDadosCidade = await refCidade.get();
 
-    obterCidadeDaEmpresa.documents.forEach((document) {
+    obterCidadeDaEmpresa.docs.forEach((document) {
       c.id = document.data()["id"];
 
-      obterDadosCidade.documents.forEach((document1) {
-        if (c.id == document1.documentID) {
+      obterDadosCidade.docs.forEach((document1) {
+        if (c.id == document1.id) {
           c = Cidade.buscarFirebase(document1);
         }
       });
@@ -96,22 +97,22 @@ class EmpresaController {
     List<Empresa> empresasMesmoCNPJ = List<Empresa>();
     List<Empresa> empresasMesmaInscEstadual = List<Empresa>();
     //Busca todas as empresas cadastradas
-    CollectionReference ref = Firestore.instance.collection("empresas");
-    QuerySnapshot eventsQuery = await ref.getDocuments();
+    CollectionReference ref = FirebaseFirestore.instance.collection("empresas");
+    QuerySnapshot eventsQuery = await ref.get();
 
-    eventsQuery.documents.forEach((document) {
+    eventsQuery.docs.forEach((document) {
       //Para cada empresa retornada verificar se o CNPJ ou inscrição estadual
       //são iguais ao que está tentando ser atribuído ao novo cadastro
       //Se for, adiciona na lista correspondente
       if (document.data()["cnpj"] == e.cnpj) {
         emp = Empresa.buscarFirebase(document);
-        emp.id = document.documentID;
+        emp.id = document.id;
         empresasMesmoCNPJ.add(emp);
       }
 
       if (document.data()["inscEstadual"] == e.inscEstadual) {
         emp = Empresa.buscarFirebase(document);
-        emp.id = document.documentID;
+        emp.id = document.id;
         empresasMesmaInscEstadual.add(emp);
       }
     });
@@ -148,5 +149,16 @@ class EmpresaController {
       emp.id = document.id;
     });
     return Future.value(emp);
+  }
+
+  bool validarCNPJ(String cnpj) {
+    bool cnpjValido;
+    CNPJ.format(cnpj);
+    if (CNPJ.isValid(cnpj)) {
+      cnpjValido = true;
+    } else {
+      cnpjValido = false;
+    }
+    return cnpjValido;
   }
 }
