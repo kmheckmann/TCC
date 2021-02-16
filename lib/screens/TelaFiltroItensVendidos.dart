@@ -128,8 +128,7 @@ class _TelaFiltroItensVendidosState extends State<TelaFiltroItensVendidos> {
   void obterLista() {
     if (filtraCliente) {
       if (_controllerRelatorioFiltraCliente.itensPedidoVenda.length != 0) {
-        _controllerRelatorioFiltraCliente.criarListaTabelaList(
-            _controllerRelatorioFiltraCliente.itensPedidoVendaAux);
+        _controllerRelatorioFiltraCliente.criarListaTabelaList();
         reportView_Itens_Cliente(
             context,
             _dropdownValueCliente,
@@ -141,11 +140,11 @@ class _TelaFiltroItensVendidosState extends State<TelaFiltroItensVendidos> {
       }
       _controllerRelatorioFiltraCliente.lista.clear();
       _controllerRelatorioFiltraCliente.itensPedidoVenda.clear();
+      _controllerRelatorioFiltraCliente.limparLinkedHashMap();
       _controllerRelatorioFiltraCliente.itensPedidoVendaAux.clear();
     } else {
       if (_controllerRelatorioItensVendidos.itensPedidoVenda.length != 0) {
-        _controllerRelatorioItensVendidos.criarListaTabelaList(
-            _controllerRelatorioItensVendidos.itensPedidoVendaAux);
+        _controllerRelatorioItensVendidos.criarListaTabelaList();
         reportView_Itens_Cliente(
             context,
             _dropdownValueCliente,
@@ -157,6 +156,7 @@ class _TelaFiltroItensVendidosState extends State<TelaFiltroItensVendidos> {
       }
       _controllerRelatorioItensVendidos.lista.clear();
       _controllerRelatorioItensVendidos.itensPedidoVenda.clear();
+      _controllerRelatorioItensVendidos.limparLinkedHashMap();
       _controllerRelatorioItensVendidos.itensPedidoVendaAux.clear();
     }
   }

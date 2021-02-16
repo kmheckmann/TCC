@@ -24,5 +24,6 @@ class RelatorioItensClienteController extends RelatorioItensVendidosController {
         }
       }
     });
+    print(pedidos.length);
   }
 }

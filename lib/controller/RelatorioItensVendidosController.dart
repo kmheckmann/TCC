@@ -8,6 +8,7 @@ class RelatorioItensVendidosController {
   List<PedidoVenda> pedidos = List<PedidoVenda>();
   List<ItemPedidoVenda> itensPedidoVenda = List<ItemPedidoVenda>();
   HashMap itensPedidoVendaAux = new HashMap<String, int>();
+  LinkedHashMap itensOrdenados;
   Timestamp dataPedidoTimeStamp;
   List<List<String>> lista = List<List<String>>();
   DateTime dataPedido;
@@ -52,7 +53,14 @@ class RelatorioItensVendidosController {
     return Future.value(itensPedidoVenda);
   }
 
+  void _ordenarMap(HashMap<String, int> itens) {
+    var sortedkeys = itens.keys.toList()..sort((k1,k2,) => itens[k2].compareTo(itens[k1]));
+    itensOrdenados = new LinkedHashMap.fromIterable(sortedkeys,
+        key: (k) => k, value: (k) => itens[k]);
+  }
+
   void removerDuplicados(List<ItemPedidoVenda> lista) {
+    print(itensPedidoVendaAux);
     lista.forEach((element) {
       if (itensPedidoVendaAux.containsKey(
           element.produto.id + ' - ' + element.labelListaProdutos)) {
@@ -67,9 +75,16 @@ class RelatorioItensVendidosController {
     });
   }
 
-  void criarListaTabelaList(HashMap<String, int> itens) {
-    itens.forEach((key, value) {
+  void criarListaTabelaList() {
+    _ordenarMap(itensPedidoVendaAux);
+    itensOrdenados.forEach((key, value) {
       lista.add([key, value.toString()]);
     });
+  }
+
+  void limparLinkedHashMap(){
+    if(itensOrdenados != null){
+      itensOrdenados.clear();
+    }
   }
 }

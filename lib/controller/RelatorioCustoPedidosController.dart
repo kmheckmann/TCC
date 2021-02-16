@@ -28,4 +28,8 @@ class RelatorioCustoPedidosController {
 
     print(lista.length);
   }
+
+  void ordenar(){
+    lista.sort();
+  }
 }
