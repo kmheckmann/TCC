@@ -11,6 +11,7 @@ class Usuario extends Model {
   bool _ehAdministrador;
   bool _ativo;
   bool _primeiroLogin;
+  bool _bloqueado;
 
   Usuario();
 
@@ -79,17 +80,26 @@ class Usuario extends Model {
     _ativo = a;
   }
 
+  bool get getBloqueado {
+    return _bloqueado;
+  }
+
+  set setBloqueado(bool b) {
+    _bloqueado = b;
+  }
+
 //Snapshot é como se fosse uma foto da coleção existente no banco
 //Esse construtor usa o snapshot para obter o ID do documento e demais informações
 //Isso é usado quando há um componente do tipo builder que vai consultar alguma colletion
 //E para cada item nessa colletion terá um snapshot e será possível atribuir isso a um objeto
   Usuario.buscarFirebase(DocumentSnapshot snapshot) {
-    _id = snapshot.id;
-    _nome = snapshot.data()["nome"];
-    _cpf = snapshot.data()["cpf"];
-    _email = snapshot.data()["email"];
-    _ehAdministrador = snapshot.data()["ehAdm"];
-    _ativo = snapshot.data()["ativo"];
-    _primeiroLogin = snapshot.data()["primeiroLogin"];
+    setID = snapshot.id;
+    setNome = snapshot.data()["nome"];
+    setCPF = snapshot.data()["cpf"]; 
+    setEmail = snapshot.data()["email"];
+    setEhAdm = snapshot.data()["ehAdm"];
+    setAtivo = snapshot.data()["ativo"];
+    setPrimeiroLogin = snapshot.data()["primeiroLogin"];
+    setBloqueado = snapshot.data()["bloqueado"];
   }
 }

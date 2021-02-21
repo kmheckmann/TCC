@@ -25,6 +25,8 @@ class UsuarioController extends Model {
 
   //indica quando algo esta sendo processado dentro da classe usuario
   bool carregando = false;
+  bool senhaInvalida = false;
+  int tentativasRestantes = 1;
 
   //converte para mapa para ser possível salvar no banco
   Map<String, dynamic> converterParaMapa(Usuario user) {
@@ -34,7 +36,8 @@ class UsuarioController extends Model {
       "email": user.getEmail,
       "ehAdm": user.getEhAdm,
       "ativo": user.getAtivo,
-      "primeiroLogin": user.getPrimeiroLogin
+      "primeiroLogin": user.getPrimeiroLogin,
+      "bloqueado": user.getBloqueado
     };
   }
 
@@ -66,6 +69,28 @@ class UsuarioController extends Model {
     });
   }
 
+  void _senhaInvalida(BuildContext context) {
+    Scaffold.of(context).showSnackBar(SnackBar(
+      content: Text("Senha inválida! Você tem mais " +
+          tentativasRestantes.toString() +
+          " tentativar até bloquear o usuário"),
+      backgroundColor: Colors.red,
+      duration: Duration(seconds: 3),
+    ));
+  }
+
+  void _bloquear(BuildContext context, VoidCallback usuarioBloqueado) {
+    if (tentativasRestantes == 1) {
+      usuario.setBloqueado = true;
+      dadosUsuarioAtual = converterParaMapa(usuario);
+      salvarUsuario(dadosUsuarioAtual, usuario.getID);
+      usuarioBloqueado();
+    } else {
+      tentativasRestantes -= 1;
+      _senhaInvalida(context);
+    }
+  }
+
 //Faz com que o login do usuario seja efetuado no sistema
   void efetuarLogin(
       {@required String email,
@@ -74,8 +99,12 @@ class UsuarioController extends Model {
       @required VoidCallback falhaLogin,
       @required VoidCallback emailNaoVerificado,
       @required VoidCallback primeiroLogin,
-      @required VoidCallback usuarioInativo}) async {
+      @required VoidCallback usuarioInativo,
+      @required VoidCallback usuarioBloqueado,
+      @required BuildContext context}) async {
     carregando = true;
+    await _obterDadosParaBloquear(email);
+    User u;
     //"avisar" todas as classes coonfiguradas para receber notificação sobre as mudancas que ocorreram no usuario
     notifyListeners();
 
@@ -83,27 +112,36 @@ class UsuarioController extends Model {
     _autenticar
         .signInWithEmailAndPassword(email: email, password: senha)
         .then((usuario) async {
-      User u = usuario.user;
+      //Carrega os dados do usuario
+      await _carregarDadosUsuario();
+      u = usuario.user;
 
       if (u.emailVerified) {
-        //Carrega os dados do usuario
-        await _carregarDadosUsuario();
-        if (dadosUsuarioAtual["ativo"]) {
-          if (!dadosUsuarioAtual["primeiroLogin"]) {
-            sucessoLogin();
+        if (!dadosUsuarioAtual["bloqueado"]) {
+          if (dadosUsuarioAtual["ativo"]) {
+            if (!dadosUsuarioAtual["primeiroLogin"]) {
+              sucessoLogin();
+            } else {
+              primeiroLogin();
+            }
           } else {
-            primeiroLogin();
+            usuarioInativo();
           }
         } else {
-          usuarioInativo();
+          usuarioBloqueado();
         }
       } else {
         emailNaoVerificado();
       }
       carregando = false;
       notifyListeners();
-    }).catchError((e) {
-      falhaLogin();
+    }).catchError((e) async {
+      if (e.toString() ==
+          "[firebase_auth/wrong-password] The password is invalid or the user does not have a password.") {
+        _bloquear(context, usuarioBloqueado);
+      } else {
+        falhaLogin();
+      }
       carregando = false;
       notifyListeners();
     });
@@ -129,11 +167,6 @@ class UsuarioController extends Model {
     dadosUsuarioAtual = Map();
     usuarioFirebase = null;
     notifyListeners();
-  }
-
-//utiliza uma propriedade nativa do firebase que dispara um email para redefinir a senha
-  void recuperarSenha(String email) {
-    _autenticar.sendPasswordResetEmail(email: email);
   }
 
   //metodo utilizado na tela TrocarSenha, após o primeiro login do user
@@ -165,6 +198,20 @@ class UsuarioController extends Model {
       }
       notifyListeners();
     }
+  }
+
+  Future<Usuario> _obterDadosParaBloquear(String email) async {
+    CollectionReference ref = FirebaseFirestore.instance.collection("usuarios");
+    QuerySnapshot eventsQuery =
+        await ref.where("email", isEqualTo: email.toLowerCase()).get();
+    Usuario u;
+    print(eventsQuery.docs.length);
+    eventsQuery.docs.forEach((document) {
+      u = Usuario.buscarFirebase(document);
+      u.setID = document.id;
+      usuario = u;
+    });
+    return Future.value(u);
   }
 
 //Obtem os dados do usuário utilizando o CPF deste

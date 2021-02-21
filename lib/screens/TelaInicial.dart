@@ -16,7 +16,6 @@ class _TelaInicialState extends State<TelaInicial> {
   final _validadorCampos = GlobalKey<FormState>();
   final _controllerEmail = TextEditingController();
   final _controllerSenha = TextEditingController();
-  UsuarioController _usuarioController = UsuarioController();
 
   @override
   Widget build(BuildContext context) {
@@ -68,36 +67,6 @@ class _TelaInicialState extends State<TelaInicial> {
                   SizedBox(
                     height: 2.0,
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FlatButton(
-                      onPressed: () {
-                        if (_controllerEmail.text.isEmpty) {
-                          _scaffold.currentState.showSnackBar(SnackBar(
-                            content:
-                                Text("Informe o email para recuperar a senha!"),
-                            backgroundColor: Colors.red,
-                            duration: Duration(seconds: 3),
-                          ));
-                        } else {
-                          model
-                              .recuperarSenha(_controllerEmail.text);
-                          _scaffold.currentState.showSnackBar(SnackBar(
-                            content: Text(
-                                "Instruções para recuperar a senha foram enviadas para seu email!"),
-                            backgroundColor: Theme.of(context).primaryColor,
-                            duration: Duration(seconds: 3),
-                          ));
-                        }
-                      },
-                      child: Text("Esqueci a senha",
-                          style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                              fontSize: 16.0)),
-                      //Para o texto ficar alinhado certinho com o final do campo "senha"
-                      padding: EdgeInsets.zero,
-                    ),
-                  ),
                   SizedBox(
                     height: 10.0,
                   ),
@@ -120,7 +89,9 @@ class _TelaInicialState extends State<TelaInicial> {
                               falhaLogin: _falhaLogin,
                               emailNaoVerificado: _emailNaoVerificado,
                               primeiroLogin: _primeiroLogin,
-                              usuarioInativo: _usuarioInativo
+                              usuarioInativo: _usuarioInativo,
+                              usuarioBloqueado: _usuarioBloqueado,
+                              context: context
                               );
                         }
                       },
@@ -134,12 +105,13 @@ class _TelaInicialState extends State<TelaInicial> {
   }
 
   void _falhaLogin() {
-    _scaffold.currentState.showSnackBar(SnackBar(
-      content: Text("Email e/ou senha inválidos!"),
-      backgroundColor: Colors.red,
-      duration: Duration(seconds: 3),
-    ));
+      _scaffold.currentState.showSnackBar(SnackBar(
+        content: Text("Email e/ou senha inválidos!"),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+      ));
   }
+
 
   void _emailNaoVerificado() {
     _scaffold.currentState.showSnackBar(SnackBar(
@@ -169,5 +141,13 @@ class _TelaInicialState extends State<TelaInicial> {
     _controllerEmail.text = "";
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (context) => TelaTrocarSenha()));
+  }
+
+  void _usuarioBloqueado() {
+    _scaffold.currentState.showSnackBar(SnackBar(
+      content: Text("Usuário bloqueado, entre em contato com o administrador"),
+      backgroundColor: Colors.red,
+      duration: Duration(seconds: 3),
+    ));
   }
 }

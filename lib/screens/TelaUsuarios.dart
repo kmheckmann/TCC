@@ -26,7 +26,7 @@ class _TelaUsuariosState extends State<TelaUsuarios> {
           }),
       body: FutureBuilder<QuerySnapshot>(
           //O sistema ira acessar o documento "usuarios"
-          future: Firestore.instance.collection("usuarios").orderBy("ativo",descending: true).getDocuments(),
+          future: FirebaseFirestore.instance.collection("usuarios").orderBy("ativo",descending: true).get(),
           //O FutureBuilder do tipo QuerySnapshot eh para obter todos os itens de uma colecao,
           //no caso a colecao itens dentro da categoria
           builder: (context, snapshot) {

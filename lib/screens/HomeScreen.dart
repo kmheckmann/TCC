@@ -8,6 +8,7 @@ import 'package:tcc_3/screens/TelaPedidosCompra.dart';
 import 'package:tcc_3/screens/TelaPedidosVenda.dart';
 import 'package:tcc_3/screens/TelaProdutos.dart';
 import 'package:tcc_3/screens/TelaRotas.dart';
+import 'package:tcc_3/screens/TelaTrocarSenha.dart';
 import 'package:tcc_3/screens/TelaUsuarios.dart';
 import 'package:tcc_3/tabs/HomeTab.dart';
 import 'package:tcc_3/widgets/Menu.dart';
@@ -107,6 +108,10 @@ class HomeScreen extends StatelessWidget {
           ),
           drawer: Menu(_pageController),
           body: TelaCategorias(),
+        ),
+        Scaffold(
+          drawer: Menu(_pageController),
+          body: TelaTrocarSenha()
         ),
       ],
     );

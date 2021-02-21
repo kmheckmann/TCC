@@ -133,7 +133,8 @@ class _TelaCRUDUsuarioState extends State<TelaCRUDUsuario> {
                                 TextInputType.text, true, true, 20)
                             : Container(),
                         _criarCampoCheckBoxAdm(),
-                        _criarCampoCheckBoxAtivo()
+                        _criarCampoCheckBoxAtivo(),
+                        _criarCampoCheckBoxBloqueado()
                       ],
                     )),
               ),
@@ -189,7 +190,7 @@ class _TelaCRUDUsuarioState extends State<TelaCRUDUsuario> {
 
               case "E-mail":
                 {
-                  usuario.setEmail = texto.toUpperCase();
+                  usuario.setEmail = texto.toLowerCase();
                 }
                 break;
             }
@@ -248,6 +249,24 @@ class _TelaCRUDUsuarioState extends State<TelaCRUDUsuario> {
           Text(
             "Ativo?",
             style: TextStyle(fontSize: 18.0),
+          ),
+        ],
+      ),
+    );
+  }
+
+    Widget _criarCampoCheckBoxBloqueado() {
+    return Container(
+      padding: EdgeInsets.only(top: 10.0),
+      child: Row(
+        children: <Widget>[
+          Checkbox(
+            value: usuario.getBloqueado == true,
+            onChanged: true ? null : null
+          ),
+          Text(
+            "Bloqueado?",
+            style: TextStyle(fontSize: 18.0, color: Colors.grey),
           ),
         ],
       ),
