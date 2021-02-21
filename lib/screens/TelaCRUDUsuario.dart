@@ -71,6 +71,26 @@ class _TelaCRUDUsuarioState extends State<TelaCRUDUsuario> {
             appBar: AppBar(
               title: Text(_nomeTela),
               centerTitle: true,
+              actions: [
+                PopupMenuButton(
+                  itemBuilder: (BuildContext bc) => [
+                    PopupMenuItem(
+                        child: Text("Desbloquear"), value: "/desbloquear"),
+                    PopupMenuItem(
+                        child: Text("Trocar senha"), value: "/trocarsenha"),
+                  ],
+                  onSelected: (value) {
+                    if (value == "/desbloquear") {
+                      print(usuario.getNome);
+                      usuario.setBloqueado = false;
+                      Map<String, dynamic> dadosUsuario =
+                        _controllerUser.converterParaMapa(usuario);
+                      _controllerUser.salvarUsuario(
+                          dadosUsuario, usuario.getID);
+                    }
+                  },
+                ),
+              ],
             ),
             floatingActionButton: FloatingActionButton(
                 child: Icon(Icons.save),
@@ -167,7 +187,8 @@ class _TelaCRUDUsuarioState extends State<TelaCRUDUsuario> {
               if (nome == "E-mail" && !text.contains(".com"))
                 return "E-mail inválido!";
             }
-            if (nome == "Senha" && text.length < 6) return "A senha deve conter no mínimo 6 caracteres";
+            if (nome == "Senha" && text.length < 6)
+              return "A senha deve conter no mínimo 6 caracteres";
           },
           decoration: InputDecoration(
               labelText: nome,
@@ -255,15 +276,14 @@ class _TelaCRUDUsuarioState extends State<TelaCRUDUsuario> {
     );
   }
 
-    Widget _criarCampoCheckBoxBloqueado() {
+  Widget _criarCampoCheckBoxBloqueado() {
     return Container(
       padding: EdgeInsets.only(top: 10.0),
       child: Row(
         children: <Widget>[
           Checkbox(
-            value: usuario.getBloqueado == true,
-            onChanged: true ? null : null
-          ),
+              value: usuario.getBloqueado == true,
+              onChanged: true ? null : null),
           Text(
             "Bloqueado?",
             style: TextStyle(fontSize: 18.0, color: Colors.grey),

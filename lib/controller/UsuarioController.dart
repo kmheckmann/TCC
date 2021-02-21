@@ -79,7 +79,7 @@ class UsuarioController extends Model {
     ));
   }
 
-  void _bloquear(BuildContext context, VoidCallback usuarioBloqueado) {
+  void _bloquearUsuario(BuildContext context, VoidCallback usuarioBloqueado) {
     if (tentativasRestantes == 1) {
       usuario.setBloqueado = true;
       dadosUsuarioAtual = converterParaMapa(usuario);
@@ -90,7 +90,6 @@ class UsuarioController extends Model {
       _senhaInvalida(context);
     }
   }
-
 //Faz com que o login do usuario seja efetuado no sistema
   void efetuarLogin(
       {@required String email,
@@ -103,7 +102,7 @@ class UsuarioController extends Model {
       @required VoidCallback usuarioBloqueado,
       @required BuildContext context}) async {
     carregando = true;
-    await _obterDadosParaBloquear(email);
+    await _obterUserPorEmail(email);
     User u;
     //"avisar" todas as classes coonfiguradas para receber notificação sobre as mudancas que ocorreram no usuario
     notifyListeners();
@@ -138,7 +137,7 @@ class UsuarioController extends Model {
     }).catchError((e) async {
       if (e.toString() ==
           "[firebase_auth/wrong-password] The password is invalid or the user does not have a password.") {
-        _bloquear(context, usuarioBloqueado);
+        _bloquearUsuario(context, usuarioBloqueado);
       } else {
         falhaLogin();
       }
@@ -200,7 +199,7 @@ class UsuarioController extends Model {
     }
   }
 
-  Future<Usuario> _obterDadosParaBloquear(String email) async {
+  Future<Usuario> _obterUserPorEmail(String email) async {
     CollectionReference ref = FirebaseFirestore.instance.collection("usuarios");
     QuerySnapshot eventsQuery =
         await ref.where("email", isEqualTo: email.toLowerCase()).get();
