@@ -18,32 +18,24 @@ class CidadeController {
     };
   }
 
-  Future<Null> salvarCidade(Map<String, dynamic> dadosCidade, String id) async {
+  Future<Null> persistirCidade(
+      Map<String, dynamic> dadosCidade, String id) async {
     this.dadosCidade = dadosCidade;
-    await Firestore.instance
+    await FirebaseFirestore.instance
         .collection("cidades")
-        .document(id)
-        .setData(dadosCidade);
-  }
-
-  Future<Null> editarCidade(
-      Map<String, dynamic> dadosCidade, String idFirebase) async {
-    this.dadosCidade = dadosCidade;
-    await Firestore.instance
-        .collection("cidades")
-        .document(idFirebase)
-        .setData(dadosCidade);
+        .doc(id)
+        .set(dadosCidade);
   }
 
   Future<Null> obterProxID() async {
     int idTemp = 0;
     int docID;
-    CollectionReference ref = Firestore.instance.collection("cidades");
-    QuerySnapshot eventsQuery = await ref.getDocuments();
+    CollectionReference ref = FirebaseFirestore.instance.collection("cidades");
+    QuerySnapshot eventsQuery = await ref.get();
 
-    eventsQuery.documents.forEach((document) {
-      docID = int.parse(document.documentID);
-      if (eventsQuery.documents.length == 0) {
+    eventsQuery.docs.forEach((document) {
+      docID = int.parse(document.id);
+      if (eventsQuery.docs.length == 0) {
         idTemp = 1;
         proxID = idTemp.toString();
       } else {
@@ -57,19 +49,25 @@ class CidadeController {
     proxID = idTemp.toString();
   }
 
-  Future<Null> obterCidadePorNome(String nomeEestado) async {
-    //Utilizado pelo cadastro de empresas, para saber qual o codigo da cidade selecionada no comboBox do cadastroF
+  Future<Null> obterCidadePorNomeEstado(String nomeEestado) async {
+    //Utilizado pelo cadastro de empresas,
+    //para saber qual os dados da cidade selecionada no comboBox
+
+    //A string recebida trás o nome e o estado separados por hifen
+    //A string é quebrada e o estado é atribuido a uma variavel e o nome a outra
     var array = nomeEestado.split(" - ");
     String nome = array[0];
     String estado = array[1];
-    CollectionReference ref = Firestore.instance.collection("cidades");
-    QuerySnapshot eventsQuery =
-        await ref.where("nome", isEqualTo: nome).getDocuments();
 
-    eventsQuery.documents.forEach((document) {
+    //obtem-se as cidades com o mesmo nome
+    CollectionReference ref = FirebaseFirestore.instance.collection("cidades");
+    QuerySnapshot eventsQuery = await ref.where("nome", isEqualTo: nome).get();
+
+    eventsQuery.docs.forEach((document) {
+      //Depois, obtem-se a cidade a onde o estado seja igual ao passado por parametro
       if (document.data()['estado'] == estado) {
         Cidade c = Cidade.buscarFirebase(document);
-        c.id = document.documentID;
+        c.id = document.id;
         cidade = c;
       }
     });
@@ -81,18 +79,18 @@ class CidadeController {
     List<Cidade> cidades = List<Cidade>();
 
     //Busca todas as cidades cadastradas
-    CollectionReference ref = Firestore.instance.collection("cidades");
+    CollectionReference ref = FirebaseFirestore.instance.collection("cidades");
     //Pega todas as cidades com o mesmo nome
     QuerySnapshot eventsQuery2 =
-        await ref.where("nome", isEqualTo: cid.nome).getDocuments();
+        await ref.where("nome", isEqualTo: cid.nome).get();
 
     //Para todas cidades com o mesmo nome encontradas verifica se possuem o mesmo estado
     //Se sim, adiciona numa lista
-    eventsQuery2.documents.forEach((document) {
+    eventsQuery2.docs.forEach((document) {
       if (document.data()["estado"] == cid.estado) {
         c.nome = document.data()["nome"];
         c.estado = document.data()["estado"];
-        c.id = document.documentID;
+        c.id = document.id;
         cidades.add(c);
       }
     });
@@ -106,8 +104,15 @@ class CidadeController {
       //Para tratar isso será comparado o ID do cadastro existente com o que esta sendo alterado
       //Se forem diferentes, será informado que o cadastro já existe e não será possível salvar
       //Se forem iguais, permite salvar
-      if (cidades.length == 1 && cidades[0].id == cid.id)
+      if (cidades.length == 1 && cidades[0].id == cid.id) {
         existeCadastro = false;
+      } else {
+        //Se não for novo cadastro, ou seja, é edição, e a lista nao tiver registros
+        //Nao
+        if (cidades.length == 0) {
+          existeCadastro = false;
+        }
+      }
     }
   }
 }

@@ -67,6 +67,35 @@ class _TelaInicialState extends State<TelaInicial> {
                   SizedBox(
                     height: 2.0,
                   ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: FlatButton(
+                      onPressed: () {
+                        if (_controllerEmail.text.isEmpty) {
+                          _scaffold.currentState.showSnackBar(SnackBar(
+                            content:
+                                Text("Informe o email para recuperar a senha!"),
+                            backgroundColor: Colors.red,
+                            duration: Duration(seconds: 3),
+                          ));
+                        } else {
+                          model.recuperarSenha(_controllerEmail.text);
+                          _scaffold.currentState.showSnackBar(SnackBar(
+                            content: Text(
+                                "Instruções para recuperar a senha foram enviadas para seu email!"),
+                            backgroundColor: Theme.of(context).primaryColor,
+                            duration: Duration(seconds: 3),
+                          ));
+                        }
+                      },
+                      child: Text("Esqueci a senha",
+                          style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              fontSize: 16.0)),
+                      //Para o texto ficar alinhado certinho com o final do campo "senha"
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
                   SizedBox(
                     height: 10.0,
                   ),
@@ -91,8 +120,7 @@ class _TelaInicialState extends State<TelaInicial> {
                               primeiroLogin: _primeiroLogin,
                               usuarioInativo: _usuarioInativo,
                               usuarioBloqueado: _usuarioBloqueado,
-                              context: context
-                              );
+                              context: context);
                         }
                       },
                     ),
@@ -105,13 +133,12 @@ class _TelaInicialState extends State<TelaInicial> {
   }
 
   void _falhaLogin() {
-      _scaffold.currentState.showSnackBar(SnackBar(
-        content: Text("Email e/ou senha inválidos!"),
-        backgroundColor: Colors.red,
-        duration: Duration(seconds: 3),
-      ));
+    _scaffold.currentState.showSnackBar(SnackBar(
+      content: Text("Email e/ou senha inválidos!"),
+      backgroundColor: Colors.red,
+      duration: Duration(seconds: 3),
+    ));
   }
-
 
   void _emailNaoVerificado() {
     _scaffold.currentState.showSnackBar(SnackBar(

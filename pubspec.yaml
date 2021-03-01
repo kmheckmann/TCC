@@ -47,6 +47,7 @@ dependencies:
   flutter_datetime_picker: ^1.4.0
   share_extend: ^1.1.9
   sortedmap: ^0.4.2+1
+  firebase_admin: ^0.1.4
 
 
 dev_dependencies:

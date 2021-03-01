@@ -26,7 +26,7 @@ class UsuarioController extends Model {
   //indica quando algo esta sendo processado dentro da classe usuario
   bool carregando = false;
   bool senhaInvalida = false;
-  int tentativasRestantes = 1;
+  int tentativasRestantes = 3;
 
   //converte para mapa para ser possível salvar no banco
   Map<String, dynamic> converterParaMapa(Usuario user) {
@@ -45,6 +45,11 @@ class UsuarioController extends Model {
   void addListener(VoidCallback listener) {
     super.addListener(listener);
     _carregarDadosUsuario();
+  }
+
+  //utiliza uma propriedade nativa do firebase que dispara um email para redefinir a senha
+  void recuperarSenha(String email) {
+    _autenticar.sendPasswordResetEmail(email: email);
   }
 
   //VoidCallBack uma funcao passada que sera chamado de dentro do metodo
@@ -90,6 +95,7 @@ class UsuarioController extends Model {
       _senhaInvalida(context);
     }
   }
+
 //Faz com que o login do usuario seja efetuado no sistema
   void efetuarLogin(
       {@required String email,

@@ -49,6 +49,7 @@ class HomeScreen extends StatelessWidget {
           appBar: AppBar(
             title: Text("Cidades"),
             centerTitle: true,
+            actions: [],
           ),
           drawer: Menu(_pageController),
           body: TelaCidades(),

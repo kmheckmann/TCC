@@ -26,7 +26,6 @@ class _TelaCRUDUsuarioState extends State<TelaCRUDUsuario> {
 
   _TelaCRUDUsuarioState({this.usuario, this.snapshot});
 
-  Usuario _usuarioEditado = Usuario();
   UsuarioController _controllerUser = UsuarioController();
   Cores _cores = Cores();
 
@@ -76,18 +75,27 @@ class _TelaCRUDUsuarioState extends State<TelaCRUDUsuario> {
                   itemBuilder: (BuildContext bc) => [
                     PopupMenuItem(
                         child: Text("Desbloquear"), value: "/desbloquear"),
-                    PopupMenuItem(
-                        child: Text("Trocar senha"), value: "/trocarsenha"),
                   ],
                   onSelected: (value) {
-                    if (value == "/desbloquear") {
-                      print(usuario.getNome);
+                    if (usuario.getBloqueado) {
                       usuario.setBloqueado = false;
                       Map<String, dynamic> dadosUsuario =
-                        _controllerUser.converterParaMapa(usuario);
+                          _controllerUser.converterParaMapa(usuario);
                       _controllerUser.salvarUsuario(
                           dadosUsuario, usuario.getID);
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return _alertaUsuarioBloqueado();
+                          });
+                    } else {
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return _alertaUsuarioNaoBloqueado();
+                          });
                     }
+                    setState(() {});
                   },
                 ),
               ],
@@ -293,8 +301,61 @@ class _TelaCRUDUsuarioState extends State<TelaCRUDUsuario> {
     );
   }
 
+  Widget _alertaUsuarioBloqueado() {
+    return AlertDialog(
+      title: Text('Sucesso'),
+      titleTextStyle: TextStyle(
+          fontWeight: FontWeight.bold, color: Colors.black, fontSize: 15.0),
+      content: SingleChildScrollView(
+        child: ListBody(
+          children: <Widget>[
+            Text(
+              'Usuário desbloqueado!',
+              style: TextStyle(color: Colors.black, fontSize: 19.0),
+            ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        FlatButton(
+          child: Text('OK'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        )
+      ],
+    );
+  }
+
+  Widget _alertaUsuarioNaoBloqueado() {
+    return AlertDialog(
+      title: Text('Atenção!'),
+      titleTextStyle: TextStyle(
+          fontWeight: FontWeight.bold, color: Colors.black, fontSize: 15.0),
+      content: SingleChildScrollView(
+        child: ListBody(
+          children: <Widget>[
+            Text(
+              'O usuário já está desbloqueado!',
+              style: TextStyle(color: Colors.black, fontSize: 19.0),
+            ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        FlatButton(
+          child: Text('OK'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        )
+      ],
+    );
+  }
+
   void _sucesso() {
     Navigator.of(context).pop();
+    setState(() {});
   }
 
   void _falha() {

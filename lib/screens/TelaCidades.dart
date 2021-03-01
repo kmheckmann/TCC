@@ -20,13 +20,17 @@ class _TelaCidadesState extends State<TelaCidades> {
           backgroundColor: Theme.of(context).primaryColor,
           onPressed: () {
             //Direciona para a tela de cadastro
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => TelaCRUDCidade()));
-            setState(() {});
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => TelaCRUDCidade()),
+            ).then((value) => setState(() {}));
           }),
       body: FutureBuilder<QuerySnapshot>(
           //O sistema ira acessar o documento "cidades"
-          future: Firestore.instance.collection("cidades").orderBy("ativa",descending: true).getDocuments(),
+          future: FirebaseFirestore.instance
+              .collection("cidades")
+              .orderBy("ativa", descending: true)
+              .get(),
           builder: (context, snapshot) {
             //Como os dados serao buscados do firebase, pode ser que demore para obter
             //entao, enquanto os dados nao sao obtidos sera apresentado um circulo na tela
@@ -39,13 +43,13 @@ class _TelaCidadesState extends State<TelaCidades> {
               return ListView.builder(
                   padding: EdgeInsets.all(4.0),
                   //Pega a quantidade de cidades
-                  itemCount: snapshot.data.documents.length,
+                  itemCount: snapshot.data.docs.length,
                   //Ira pegar cada cidade no firebase e retornar
                   itemBuilder: (context, index) {
                     Cidade cidade =
-                        Cidade.buscarFirebase(snapshot.data.documents[index]);
+                        Cidade.buscarFirebase(snapshot.data.docs[index]);
                     return _construirListaCidades(
-                        context, cidade, snapshot.data.documents[index]);
+                        context, cidade, snapshot.data.docs[index]);
                   });
           }),
     );
@@ -95,10 +99,10 @@ class _TelaCidadesState extends State<TelaCidades> {
       ),
       onTap: () {
         //ao clicar sobre o card direciona para a página de edição
-        Navigator.of(contexto).push(MaterialPageRoute(
-            builder: (contexto) =>
-                TelaCRUDCidade(cidade: c, snapshot: snapshot)));
-        setState(() {});
+        Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => TelaCRUDCidade(cidade: c, snapshot: snapshot)),
+            ).then((value) => setState(() {}));
       },
     );
   }

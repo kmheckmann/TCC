@@ -15,7 +15,8 @@ class TelaCRUDCidade extends StatefulWidget {
 
 class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
   final DocumentSnapshot snapshot;
-  final _controllerNome = TextEditingController(); //controlador de texto do campo nome para ser possível pegar o que foi digitado
+  //controlador de texto do campo nome para ser possível pegar o que foi digitado
+  final _controllerNome = TextEditingController();
   final _validadorCampos = GlobalKey<FormState>();
   final _scaffold = GlobalKey<ScaffoldState>();
   bool _existeCadastro;
@@ -58,9 +59,12 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
             child: Icon(Icons.save),
             backgroundColor: Colors.blue,
             onPressed: () async {
-              //verifica se a já existe uma cidade com as mesma informações
-              await _controllerCidade.verificarExistenciaCidade(cidade, _novocadastro);
-              _existeCadastro = _controllerCidade.existeCadastro;
+              if (_dropdownValue != null && _controllerNome.text.isNotEmpty) {
+                //verifica se a já existe uma cidade com as mesma informações
+                await _controllerCidade.verificarExistenciaCidade(
+                    cidade, _novocadastro);
+                _existeCadastro = _controllerCidade.existeCadastro;
+              }
 
               //Faz a validação do form (propriedade validador do FormTextField)
               if (_validadorCampos.currentState.validate()) {
@@ -80,13 +84,12 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
                     if (_novocadastro) {
                       await _controllerCidade.obterProxID();
                       cidade.id = _controllerCidade.proxID;
-                      _controllerCidade.salvarCidade(mapa, cidade.id);
+                      _controllerCidade.persistirCidade(mapa, cidade.id);
                     } else {
-                      _controllerCidade.editarCidade(mapa, cidade.id);
+                      _controllerCidade.persistirCidade(mapa, cidade.id);
                     }
                     //retorna para a listagem das cidades
                     Navigator.of(context).pop();
-                    setState(() {});
                   }
                 } else {
                   if (_dropdownValue == null) {

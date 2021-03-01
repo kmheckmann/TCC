@@ -15,7 +15,7 @@ class Cidade {
 //Isso é usado quando há um componente do tipo builder que vai consultar alguma colletion
 //E para cada item nessa colletion terá um snapshot e será possível atribuir isso a um objeto
   Cidade.buscarFirebase(DocumentSnapshot snapshot) {
-    id = snapshot.documentID;
+    id = snapshot.id;
     nome = snapshot.data()["nome"];
     estado = snapshot.data()["estado"];
     ativa = snapshot.data()["ativa"];
