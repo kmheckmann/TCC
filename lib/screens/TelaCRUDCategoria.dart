@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/controller/CategoriaController.dart';
 import 'package:tcc_3/model/Categoria.dart';
 
 class TelaCRUDCategoria extends StatefulWidget {
   final Categoria categoria;
-  DocumentSnapshot snapshot;
+  final DocumentSnapshot snapshot;
 
   TelaCRUDCategoria({this.categoria, this.snapshot});
   @override
@@ -15,6 +16,7 @@ class TelaCRUDCategoria extends StatefulWidget {
 
 class _TelaCRUDCategoriaState extends State<TelaCRUDCategoria> {
   Categoria categoria;
+  ObterProxIDController proxID = ObterProxIDController();
   final DocumentSnapshot snapshot;
 
   _TelaCRUDCategoriaState(this.categoria, this.snapshot);
@@ -56,10 +58,12 @@ class _TelaCRUDCategoriaState extends State<TelaCRUDCategoria> {
           child: Icon(Icons.save),
           backgroundColor: Colors.blue,
           onPressed: () async {
-            //Verifica se já existe um categoria com as mesmas informações
-            await controllerCategoria.verificarExistenciaCategoria(
-                categoria, _novocadastro);
-            _existeCadastro = controllerCategoria.existeCadastro;
+            if (_controllerDescricao.text.isNotEmpty) {
+              //Verifica se já existe um categoria com as mesmas informações
+              await controllerCategoria.verificarExistenciaCategoria(
+                  categoria, _novocadastro);
+              _existeCadastro = controllerCategoria.existeCadastro;
+            }
 
             //verifica se os criterios para permitir salvar um registro foram preenchidos
             if (_validadorCampos.currentState.validate()) {
@@ -67,12 +71,13 @@ class _TelaCRUDCategoriaState extends State<TelaCRUDCategoria> {
                   controllerCategoria.converterParaMapa(categoria);
 
               if (_novocadastro) {
-                await controllerCategoria.obterProxID();
-                categoria.id = controllerCategoria.proxID;
-                controllerCategoria.salvarCategoria(mapa, categoria.id);
+                await proxID.obterProxID("categorias");
+                categoria.id = proxID.proxID;
+                controllerCategoria.persistirCategoria(mapa, categoria.id);
               } else {
-                controllerCategoria.editarCategoria(mapa, categoria.id);
+                controllerCategoria.persistirCategoria(mapa, categoria.id);
               }
+
               //volta para a listagem de categorias após salvar
               Navigator.of(context).pop();
             }
@@ -86,7 +91,7 @@ class _TelaCRUDCategoriaState extends State<TelaCRUDCategoria> {
               TextFormField(
                 controller: _controllerDescricao,
                 decoration: InputDecoration(
-                    labelText: "Nome da categoria",
+                    labelText: "Descrição da categoria",
                     labelStyle: TextStyle(
                         color: Colors.blueGrey, fontWeight: FontWeight.w400)),
                 style: TextStyle(color: Colors.black, fontSize: 17.0),

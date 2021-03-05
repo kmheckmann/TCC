@@ -20,12 +20,17 @@ class _TelaCategoriasState extends State<TelaCategorias> {
           backgroundColor: Theme.of(context).primaryColor,
           onPressed: () {
             //Direciona para a tela para adicionar novos registros
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => TelaCRUDCategoria()));
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => TelaCRUDCategoria()),
+            ).then((value) => setState(() {}));
           }),
       body: FutureBuilder<QuerySnapshot>(
           //O sistema ira acessar o documento "categorias"
-          future: Firestore.instance.collection("categorias").orderBy("ativa",descending: true).getDocuments(),
+          future: FirebaseFirestore.instance
+              .collection("categorias")
+              .orderBy("ativa", descending: true)
+              .get(),
           builder: (context, snapshot) {
             //Como os dados serao buscados do firebase, pode ser que demore para obter
             //entao, enquanto os dados nao sao obtidos sera apresentado um circulo na tela
@@ -38,13 +43,13 @@ class _TelaCategoriasState extends State<TelaCategorias> {
               return ListView.builder(
                   padding: EdgeInsets.all(4.0),
                   //Pega a quantidade de cidades
-                  itemCount: snapshot.data.documents.length,
+                  itemCount: snapshot.data.docs.length,
                   //Ira pegar cada cidade no firebase e retornar
                   itemBuilder: (context, index) {
                     Categoria categoria = Categoria.buscarFirebase(
-                        snapshot.data.documents[index]);
+                        snapshot.data.docs[index]);
                     return _construirListaCidades(
-                        context, categoria, snapshot.data.documents[index]);
+                        context, categoria, snapshot.data.docs[index]);
                   });
           }),
     );
@@ -88,9 +93,12 @@ class _TelaCategoriasState extends State<TelaCategorias> {
       ),
       onTap: () {
         //Ao clicar sobre o card direciona para a tela de edição
-        Navigator.of(contexto).push(MaterialPageRoute(
-            builder: (contexto) =>
-                TelaCRUDCategoria(categoria: c, snapshot: snapshot)));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  TelaCRUDCategoria(categoria: c, snapshot: snapshot)),
+        ).then((value) => setState(() {}));
       },
     );
   }

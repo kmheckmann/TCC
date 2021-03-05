@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tcc_3/controller/CidadeController.dart';
+import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/model/Cidade.dart';
 
 class TelaCRUDCidade extends StatefulWidget {
@@ -15,6 +16,7 @@ class TelaCRUDCidade extends StatefulWidget {
 
 class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
   final DocumentSnapshot snapshot;
+  ObterProxIDController obterProxID = ObterProxIDController();
   //controlador de texto do campo nome para ser possível pegar o que foi digitado
   final _controllerNome = TextEditingController();
   final _validadorCampos = GlobalKey<FormState>();
@@ -82,8 +84,8 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
                     Map<String, dynamic> mapa =
                         _controllerCidade.converterParaMapa(cidade);
                     if (_novocadastro) {
-                      await _controllerCidade.obterProxID();
-                      cidade.id = _controllerCidade.proxID;
+                      await obterProxID.obterProxID("cidades");
+                      cidade.id = obterProxID.proxID;
                       _controllerCidade.persistirCidade(mapa, cidade.id);
                     } else {
                       _controllerCidade.persistirCidade(mapa, cidade.id);

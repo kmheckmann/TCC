@@ -12,7 +12,7 @@ class Categoria {
 //Isso é usado quando há um componente do tipo builder que vai consultar alguma colletion
 //E para cada item nessa colletion terá um snapshot e será possível atribuir isso a um objeto
   Categoria.buscarFirebase(DocumentSnapshot snapshot) {
-    id = snapshot.documentID;
+    id = snapshot.id;
     descricao = snapshot.data()["descricao"];
     ativa = snapshot.data()["ativa"];
   }
