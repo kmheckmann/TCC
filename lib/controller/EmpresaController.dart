@@ -79,10 +79,10 @@ class EmpresaController {
     QuerySnapshot obterDadosCidade = await refCidade.get();
 
     obterCidadeDaEmpresa.docs.forEach((document) {
-      c.id = document.data()["id"];
+      c.setID = document.data()["id"];
 
       obterDadosCidade.docs.forEach((document1) {
-        if (c.id == document1.id) {
+        if (c.getID == document1.id) {
           c = Cidade.buscarFirebase(document1);
         }
       });

@@ -11,9 +11,9 @@ class CidadeController {
 
   Map<String, dynamic> converterParaMapa(Cidade c) {
     return {
-      "nome": c.nome,
-      "estado": c.estado,
-      "ativa": c.ativa,
+      "nome": c.getNome,
+      "estado": c.getEstado,
+      "ativa": c.getAtiva,
     };
   }
 
@@ -44,7 +44,7 @@ class CidadeController {
       //Depois, obtem-se a cidade a onde o estado seja igual ao passado por parametro
       if (document.data()['estado'] == estado) {
         Cidade c = Cidade.buscarFirebase(document);
-        c.id = document.id;
+        c.setID = document.id;
         cidade = c;
       }
     });
@@ -59,15 +59,15 @@ class CidadeController {
     CollectionReference ref = FirebaseFirestore.instance.collection("cidades");
     //Pega todas as cidades com o mesmo nome
     QuerySnapshot eventsQuery2 =
-        await ref.where("nome", isEqualTo: cid.nome).get();
+        await ref.where("nome", isEqualTo: cid.getNome).get();
 
     //Para todas cidades com o mesmo nome encontradas verifica se possuem o mesmo estado
     //Se sim, adiciona numa lista
     eventsQuery2.docs.forEach((document) {
-      if (document.data()["estado"] == cid.estado) {
-        c.nome = document.data()["nome"];
-        c.estado = document.data()["estado"];
-        c.id = document.id;
+      if (document.data()["estado"] == cid.getEstado) {
+        c.setNome = document.data()["nome"];
+        c.setEstado = document.data()["estado"];
+        c.setID = document.id;
         cidades.add(c);
       }
     });
@@ -81,7 +81,7 @@ class CidadeController {
       //Para tratar isso será comparado o ID do cadastro existente com o que esta sendo alterado
       //Se forem diferentes, será informado que o cadastro já existe e não será possível salvar
       //Se forem iguais, permite salvar
-      if (cidades.length == 1 && cidades[0].id == cid.id) {
+      if (cidades.length == 1 && cidades[0].getID == cid.getID) {
         existeCadastro = false;
       } else {
         //Se não for novo cadastro, ou seja, é edição, e a lista nao tiver registros

@@ -71,25 +71,25 @@ class _TelaCidadesState extends State<TelaCidades> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    c.nome,
+                    c.getNome,
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: cores.corTitulo(c.ativa),
+                        color: cores.corTitulo(c.getAtiva),
                         fontSize: 20.0),
                   ),
                   Text(
-                    c.estado,
+                    c.getEstado,
                     style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w500,
-                        color: cores.corSecundaria(c.ativa)),
+                        color: cores.corSecundaria(c.getAtiva)),
                   ),
                   Text(
-                    c.ativa ? "Ativa" : "Inativa",
+                    c.getAtiva ? "Ativa" : "Inativa",
                     style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w500,
-                        color: cores.corSecundaria(c.ativa)),
+                        color: cores.corSecundaria(c.getAtiva)),
                   ),
                 ],
               ),

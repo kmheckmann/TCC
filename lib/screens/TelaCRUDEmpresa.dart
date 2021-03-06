@@ -64,7 +64,7 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
       _controllerNumero.text = empresa.numero.toString();
       _controllerTelefone.text = empresa.telefone;
       _controllerEmail.text = empresa.email;
-      _dropdownValue = (empresa.cidade.nome + ' - ' + empresa.cidade.estado);
+      _dropdownValue = (empresa.cidade.getNome+ ' - ' + empresa.cidade.getEstado);
       _novocadastro = false;
     } else {
       _nomeTela = "Cadastrar Empresa";
@@ -105,7 +105,7 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
 
                   //Transforma as informações da empresa e da cidade para mapa para salvar no firebase
                   Map<String, dynamic> mapaCidade = Map();
-                  mapaCidade["id"] = empresa.cidade.id;
+                  mapaCidade["id"] = empresa.cidade.getID;
                   Map<String, dynamic> mapa =
                       _controllerEmpresa.converterParaMapa(empresa);
 

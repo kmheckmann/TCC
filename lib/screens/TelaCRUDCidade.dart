@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:tcc_3/acessorios/Campos.dart';
+import 'package:tcc_3/acessorios/Cores.dart';
+import 'package:tcc_3/acessorios/Mensagens.dart';
 import 'package:tcc_3/controller/CidadeController.dart';
 import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/model/Cidade.dart';
@@ -16,19 +19,25 @@ class TelaCRUDCidade extends StatefulWidget {
 
 class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
   final DocumentSnapshot snapshot;
+  _TelaCRUDCidadeState(this.cidade, this.snapshot);
+
   ObterProxIDController obterProxID = ObterProxIDController();
-  //controlador de texto do campo nome para ser possível pegar o que foi digitado
+  CidadeController _controllerCidade = CidadeController();
+  Cores cores = Cores();
+  Campos campos = Campos();
+  Mensagens msg = Mensagens();
+
+  //Usado para inserir texto no campo ou obter
   final _controllerNome = TextEditingController();
+  final _controllerID = TextEditingController();
   final _validadorCampos = GlobalKey<FormState>();
   final _scaffold = GlobalKey<ScaffoldState>();
-  bool _existeCadastro;
-  String _dropdownValue;
 
   Cidade cidade;
-  CidadeController _controllerCidade = CidadeController();
   bool _novocadastro;
+  bool _existeCadastro;
   String _nomeTela;
-  _TelaCRUDCidadeState(this.cidade, this.snapshot);
+  String _dropdownValue;
 
   @override
   void initState() {
@@ -36,13 +45,14 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
     _existeCadastro = false;
     if (cidade != null) {
       _nomeTela = "Editar Cidade";
-      _controllerNome.text = cidade.nome;
-      _dropdownValue = cidade.estado;
+      _controllerNome.text = cidade.getNome;
+      _controllerID.text = cidade.getID;
+      _dropdownValue = cidade.getEstado;
       _novocadastro = false;
     } else {
       _nomeTela = "Cadastrar Cidade";
       cidade = Cidade();
-      cidade.ativa = true;
+      cidade.setAtiva = true;
       _novocadastro = true;
     }
   }
@@ -60,49 +70,8 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
         floatingActionButton: FloatingActionButton(
             child: Icon(Icons.save),
             backgroundColor: Colors.blue,
-            onPressed: () async {
-              if (_dropdownValue != null && _controllerNome.text.isNotEmpty) {
-                //verifica se a já existe uma cidade com as mesma informações
-                await _controllerCidade.verificarExistenciaCidade(
-                    cidade, _novocadastro);
-                _existeCadastro = _controllerCidade.existeCadastro;
-              }
-
-              //Faz a validação do form (propriedade validador do FormTextField)
-              if (_validadorCampos.currentState.validate()) {
-                if (_dropdownValue != null) {
-                  //Se o estado nao for informado, não será permitido salvar o cadastro
-                  //Caso exista uma cidade com mesmo nome o cadastro não é realizado e é apresentada a mensagem
-                  if (_existeCadastro) {
-                    _scaffold.currentState.showSnackBar(SnackBar(
-                      content: Text("Essa cidade já está cadastrada!"),
-                      backgroundColor: Colors.red,
-                      duration: Duration(seconds: 5),
-                    ));
-                  } else {
-                    //Se estiver tudo certo converte para mapa para salvar no banco
-                    Map<String, dynamic> mapa =
-                        _controllerCidade.converterParaMapa(cidade);
-                    if (_novocadastro) {
-                      await obterProxID.obterProxID("cidades");
-                      cidade.id = obterProxID.proxID;
-                      _controllerCidade.persistirCidade(mapa, cidade.id);
-                    } else {
-                      _controllerCidade.persistirCidade(mapa, cidade.id);
-                    }
-                    //retorna para a listagem das cidades
-                    Navigator.of(context).pop();
-                  }
-                } else {
-                  if (_dropdownValue == null) {
-                    _scaffold.currentState.showSnackBar(SnackBar(
-                      content: Text("É necessário selecionar um Estado!"),
-                      backgroundColor: Colors.red,
-                      duration: Duration(seconds: 5),
-                    ));
-                  }
-                }
-              }
+            onPressed: () {
+              _codigoBotaoSalvar();
             }),
         body: Form(
             key: _validadorCampos,
@@ -110,25 +79,70 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
               padding: EdgeInsets.all(8.0),
               //ListView para adicionar scroll quando abrir o teclado em vez de ocultar os campos
               children: <Widget>[
+                campos.campoTextoDesabilitado(_controllerID, "Código", false),
                 _criarDropDownEstado(),
-                TextFormField(
-                  controller: _controllerNome,
-                  decoration: InputDecoration(hintText: "Nome Cidade"),
-                  style: TextStyle(color: Colors.black, fontSize: 17.0),
-                  keyboardType: TextInputType.text,
-                  //Onde é realizada a validação do form
-                  validator: (text) {
-                    //no validator consiste se a cidade informada já existe
-                    //se existir retorna a mensagem
-                    if (text.isEmpty) return "Informe o nome da cidade!";
-                  },
-                  onChanged: (texto) {
-                    cidade.nome = texto.toUpperCase();
-                  },
-                ),
+                _criarCampoNome(),
                 _criarCampoCheckBox()
               ],
             )));
+  }
+
+  void _codigoBotaoSalvar() async {
+    //Se os campos possuirem valores informados
+    //verifica se a já existe uma cidade com as mesma informações
+    if (_dropdownValue != null && _controllerNome.text.isNotEmpty) {
+      await _controllerCidade.verificarExistenciaCidade(cidade, _novocadastro);
+      _existeCadastro = _controllerCidade.existeCadastro;
+    }
+
+    //Faz a validação do form (propriedade validador do FormTextField)
+    if (_validadorCampos.currentState.validate()) {
+      if (_dropdownValue != null) {
+        //Se o estado nao for informado, não será permitido salvar o cadastro
+        //Caso exista uma cidade com mesmo nome o cadastro não é realizado e é apresentada a mensagem
+        if (!_existeCadastro) {
+          //Se estiver tudo certo converte para mapa para salvar no banco
+          Map<String, dynamic> mapa =
+              _controllerCidade.converterParaMapa(cidade);
+
+          if (_novocadastro) {
+            await obterProxID.obterProxID("cidades");
+            cidade.setID = obterProxID.proxID;
+            _controllerCidade.persistirCidade(mapa, cidade.getID);
+          } else {
+            _controllerCidade.persistirCidade(mapa, cidade.getID);
+          }
+          //retorna para a listagem das cidades
+          Navigator.of(context).pop();
+        } else {
+          msg.exibirBarraMensagem(
+              "Essa cidade já está cadastrada!", Colors.red, _scaffold);
+        }
+      } else {
+        if (_dropdownValue == null) {
+          msg.exibirBarraMensagem(
+              "É necessário selecionar um Estado!", Colors.red, _scaffold);
+        }
+      }
+    }
+  }
+
+  Widget _criarCampoNome() {
+    return TextFormField(
+      controller: _controllerNome,
+      decoration: InputDecoration(hintText: "Nome Cidade"),
+      style: TextStyle(color: cores.corCampo(true), fontSize: 17.0),
+      keyboardType: TextInputType.text,
+      //Onde é realizada a validação do form
+      validator: (text) {
+        //no validator consiste se a cidade informada já existe
+        //se existir retorna a mensagem
+        if (text.isEmpty) return "Informe o nome da cidade!";
+      },
+      onChanged: (texto) {
+        cidade.setNome = texto.toUpperCase();
+      },
+    );
   }
 
   Widget _criarCampoCheckBox() {
@@ -137,13 +151,13 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
       child: Row(
         children: <Widget>[
           Checkbox(
-            value: cidade.ativa == true,
+            value: cidade.getAtiva == true,
             onChanged: (bool novoValor) {
               setState(() {
                 if (novoValor) {
-                  cidade.ativa = true;
+                  cidade.setAtiva = true;
                 } else {
-                  cidade.ativa = false;
+                  cidade.setAtiva = false;
                 }
               });
             },
@@ -172,9 +186,9 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
             hint: Text("Selecionar Estado"),
             onChanged: (String newValue) {
               setState(() {
-                cidade.estado = null;
+                cidade.setEstado = null;
                 _dropdownValue = newValue;
-                cidade.estado = _dropdownValue;
+                cidade.setEstado = _dropdownValue;
               });
             },
             items: <String>[

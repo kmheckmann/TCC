@@ -26,4 +26,12 @@ class Cores {
       return Color.fromARGB(255, 160, 160, 160);
     }
   }
+
+  Color corTextoCampoDesabilitado(bool situacao){
+    if (situacao == true) {
+      return Colors.black;
+    } else {
+      return Colors.blueGrey;
+    }
+  }
 }
