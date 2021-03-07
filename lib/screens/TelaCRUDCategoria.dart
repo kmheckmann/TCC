@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:tcc_3/acessorios/Campos.dart';
+import 'package:tcc_3/acessorios/Cores.dart';
+import 'package:tcc_3/acessorios/Mensagens.dart';
 import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/controller/CategoriaController.dart';
 import 'package:tcc_3/model/Categoria.dart';
@@ -15,16 +18,22 @@ class TelaCRUDCategoria extends StatefulWidget {
 }
 
 class _TelaCRUDCategoriaState extends State<TelaCRUDCategoria> {
-  Categoria categoria;
-  ObterProxIDController proxID = ObterProxIDController();
   final DocumentSnapshot snapshot;
+  Categoria categoria;
 
   _TelaCRUDCategoriaState(this.categoria, this.snapshot);
 
+  ObterProxIDController proxID = ObterProxIDController();
+  CategoriaController controllerCategoria = CategoriaController();
+  Cores cores = Cores();
+  Campos campos = Campos();
+  Mensagens msg = Mensagens();
+
   final _controllerDescricao = TextEditingController();
+  final _controllerID = TextEditingController();
   final _validadorCampos = GlobalKey<FormState>();
   final _scaffold = GlobalKey<ScaffoldState>();
-  CategoriaController controllerCategoria = CategoriaController();
+
   bool _existeCadastro;
   bool _novocadastro;
   String _nomeTela;
@@ -35,12 +44,13 @@ class _TelaCRUDCategoriaState extends State<TelaCRUDCategoria> {
     _existeCadastro = false;
     if (categoria != null) {
       _nomeTela = "Editar Categoria";
-      _controllerDescricao.text = categoria.descricao;
+      _controllerDescricao.text = categoria.getDescricao;
+      _controllerID.text = categoria.getID;
       _novocadastro = false;
     } else {
       _nomeTela = "Cadastrar Categoria";
       categoria = Categoria();
-      categoria.ativa = true;
+      categoria.setAtiva = true;
       _novocadastro = true;
     }
   }
@@ -58,29 +68,7 @@ class _TelaCRUDCategoriaState extends State<TelaCRUDCategoria> {
           child: Icon(Icons.save),
           backgroundColor: Colors.blue,
           onPressed: () async {
-            if (_controllerDescricao.text.isNotEmpty) {
-              //Verifica se já existe um categoria com as mesmas informações
-              await controllerCategoria.verificarExistenciaCategoria(
-                  categoria, _novocadastro);
-              _existeCadastro = controllerCategoria.existeCadastro;
-            }
-
-            //verifica se os criterios para permitir salvar um registro foram preenchidos
-            if (_validadorCampos.currentState.validate()) {
-              Map<String, dynamic> mapa =
-                  controllerCategoria.converterParaMapa(categoria);
-
-              if (_novocadastro) {
-                await proxID.obterProxID("categorias");
-                categoria.id = proxID.proxID;
-                controllerCategoria.persistirCategoria(mapa, categoria.id);
-              } else {
-                controllerCategoria.persistirCategoria(mapa, categoria.id);
-              }
-
-              //volta para a listagem de categorias após salvar
-              Navigator.of(context).pop();
-            }
+            _codigoBotaoSalvar();
           }),
       //corpo da tela
       body: Form(
@@ -88,27 +76,59 @@ class _TelaCRUDCategoriaState extends State<TelaCRUDCategoria> {
           child: ListView(
             padding: EdgeInsets.all(8.0),
             children: <Widget>[
-              TextFormField(
-                controller: _controllerDescricao,
-                decoration: InputDecoration(
-                    labelText: "Descrição da categoria",
-                    labelStyle: TextStyle(
-                        color: Colors.blueGrey, fontWeight: FontWeight.w400)),
-                style: TextStyle(color: Colors.black, fontSize: 17.0),
-                keyboardType: TextInputType.text,
-                //Onde é realizada a validação do form
-                validator: (text) {
-                  //verifica se o campo está preenchidoe se a categoria já existe, se sim, retorna mensagem
-                  if (_existeCadastro) return "Categoria já existe. Verifique!";
-                  if (text.isEmpty) return "Informe a descrição!";
-                },
-                onChanged: (text) {
-                  categoria.descricao = text.toUpperCase();
-                },
-              ),
+              campos.campoTextoDesabilitado(_controllerID, "Código", false),
+              _criarCampoDescricao(),
               _criarCampoCheckBox()
             ],
           )),
+    );
+  }
+
+  void _codigoBotaoSalvar() async {
+    if (_controllerDescricao.text.isNotEmpty) {
+      //Verifica se já existe um categoria com as mesmas informações
+      await controllerCategoria.verificarExistenciaCategoria(
+          categoria, _novocadastro);
+      _existeCadastro = controllerCategoria.existeCadastro;
+    }
+
+    //verifica se os criterios para permitir salvar um registro foram preenchidos
+    if (_validadorCampos.currentState.validate()) {
+      Map<String, dynamic> mapa =
+          controllerCategoria.converterParaMapa(categoria);
+
+      if (_novocadastro) {
+        await proxID.obterProxID("categorias");
+        categoria.setID = proxID.proxID;
+        controllerCategoria.persistirCategoria(mapa, categoria.getID);
+      } else {
+        controllerCategoria.persistirCategoria(mapa, categoria.getID);
+      }
+
+      //volta para a listagem de categorias após salvar
+      Navigator.of(context).pop();
+    }
+  }
+
+  Widget _criarCampoDescricao() {
+    return TextFormField(
+      controller: _controllerDescricao,
+      decoration: InputDecoration(
+          hintText: "Descrição da categoria",
+          labelText: "Descrição da categoria",
+          labelStyle:
+              TextStyle(color: cores.corLabel(), fontWeight: FontWeight.w400)),
+      style: TextStyle(color: Colors.black, fontSize: 17.0),
+      keyboardType: TextInputType.text,
+      //Onde é realizada a validação do form
+      validator: (text) {
+        //verifica se o campo está preenchidoe se a categoria já existe, se sim, retorna mensagem
+        if (_existeCadastro) return "Categoria já existe. Verifique!";
+        if (text.isEmpty) return "Informe a descrição!";
+      },
+      onChanged: (text) {
+        categoria.setDescricao = text.toUpperCase();
+      },
     );
   }
 
@@ -118,13 +138,13 @@ class _TelaCRUDCategoriaState extends State<TelaCRUDCategoria> {
       child: Row(
         children: <Widget>[
           Checkbox(
-            value: categoria.ativa == true,
+            value: categoria.getAtiva == true,
             onChanged: (bool novoValor) {
               setState(() {
                 if (novoValor) {
-                  categoria.ativa = true;
+                  categoria.setAtiva = true;
                 } else {
-                  categoria.ativa = false;
+                  categoria.setAtiva = false;
                 }
               });
             },

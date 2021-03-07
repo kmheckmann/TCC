@@ -72,18 +72,18 @@ class _TelaCategoriasState extends State<TelaCategorias> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    c.descricao,
+                    c.getDescricao,
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: cores.corTitulo(c.ativa),
+                        color: cores.corTitulo(c.getAtiva),
                         fontSize: 20.0),
                   ),
                   Text(
-                    c.ativa ? "Ativa" : "Inativa",
+                    c.getAtiva ? "Ativa" : "Inativa",
                     style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w500,
-                        color: cores.corSecundaria(c.ativa)),
+                        color: cores.corSecundaria(c.getAtiva)),
                   ),
                 ],
               ),

@@ -130,7 +130,11 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
   Widget _criarCampoNome() {
     return TextFormField(
       controller: _controllerNome,
-      decoration: InputDecoration(hintText: "Nome Cidade"),
+      decoration: InputDecoration(
+          hintText: "Nome Cidade",
+          labelText: "Nome Cidade",
+          labelStyle:
+              TextStyle(color: cores.corLabel(), fontWeight: FontWeight.w400)),
       style: TextStyle(color: cores.corCampo(true), fontSize: 17.0),
       keyboardType: TextInputType.text,
       //Onde é realizada a validação do form

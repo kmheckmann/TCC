@@ -50,7 +50,7 @@ class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
       _controllerCodigo.text = produto.codigo.toString();
       _controllerCodBarra.text = produto.codBarra.toString();
       _controllerPercentualLucro.text = produto.percentualLucro.toString();
-      _dropdownValueCategoria = produto.categoria.descricao;
+      _dropdownValueCategoria = produto.categoria.getDescricao;
       _controllerDescricao.text = produto.descricao;
     } else {
       _nomeTela = "Cadastrar Produto";
@@ -80,7 +80,7 @@ class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
                 Map<String, dynamic> mapa =
                     controllerProduto.converterParaMapa(produto);
                 Map<String, dynamic> mapaCategoria = Map();
-                mapaCategoria["id"] = categoria.id;
+                mapaCategoria["id"] = categoria.getID;
                 if (_novocadastro) {
                   await controllerProduto.obterProxID();
                   produto.id = controllerProduto.proxID;

@@ -104,9 +104,9 @@ class ProdutoController {
     //Pega o ID da categoria vinculada ao produto e compara com os IDs das categorias cadastradas
     //Se o ID da categoria vinculada ao produto for igual ao ID de uma das categorias cadastradas, atribui as informações dessa categoria a categoria vinculada ao produto
     obterCategoria.documents.forEach((document) {
-      c.id = document.data()["id"];
+      c.setID = document.data()["id"];
       obterDadosCategoria.documents.forEach((document1) {
-        if (c.id == document1.documentID) {
+        if (c.getID == document1.documentID) {
           c = Categoria.buscarFirebase(document1);
         }
       });

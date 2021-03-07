@@ -19,7 +19,7 @@ class Cores {
     }
   }
 
-  Color corCampo(bool situacao){
+  Color corCampo(bool situacao) {
     if (situacao == true) {
       return Color.fromARGB(255, 0, 0, 0);
     } else {
@@ -27,11 +27,7 @@ class Cores {
     }
   }
 
-  Color corTextoCampoDesabilitado(bool situacao){
-    if (situacao == true) {
-      return Colors.black;
-    } else {
-      return Colors.blueGrey;
-    }
+  Color corLabel() {
+    return Colors.blueGrey;
   }
 }
