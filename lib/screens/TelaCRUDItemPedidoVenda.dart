@@ -55,7 +55,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
       _controllerEstoque.obterEstoqueProduto(produto);
       _nomeTela = "Editar Produto";
       vlItemAntigo = itemPedido.preco;
-      _dropdownValueProduto = itemPedido.produto.descricao;
+      _dropdownValueProduto = itemPedido.produto.getDescricao;
       _controllerPreco.text = itemPedido.preco.toString();
       _controllerQtde.text = itemPedido.quantidade.toString();
       _controllerProdQtde.text = _controllerEstoque.qtdeExistente.toString();
@@ -239,7 +239,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
       pedidoVenda.valorComDesconto =
           _controllerPedido.pedidoVenda.valorComDesconto;
       _controllerItemPedido.persistirItem(itemPedido, pedidoVenda.id,
-          produto.id, _controllerPedido.converterParaMapaPedidoVenda(pedidoVenda));
+          produto.getID, _controllerPedido.converterParaMapaPedidoVenda(pedidoVenda));
     } else {
       _controllerPedido.atualizarPrecoNoVlTotal(
           vlItemAntigo, pedidoVenda, itemPedido);
@@ -247,7 +247,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
       pedidoVenda.valorComDesconto =
           _controllerPedido.pedidoVenda.valorComDesconto;
       _controllerItemPedido.persistirItem(itemPedido, pedidoVenda.id,
-          produto.id, _controllerPedido.converterParaMapaPedidoVenda(pedidoVenda));
+          produto.getID, _controllerPedido.converterParaMapaPedidoVenda(pedidoVenda));
     }
     Navigator.of(context).pop(MaterialPageRoute(
         builder: (contexto) => TelaItensPedidovenda(pedidoVenda: pedidoVenda)));

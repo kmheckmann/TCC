@@ -55,9 +55,9 @@ abstract class ItemPedidoController {
     //Pega o ID do produto do pedido e compara com os IDs dos produtos cadastrados
     //Se o ID do produto do pedido for igual ao ID de um dos produtos cadastradao, atribui as informações
     obterProduto.documents.forEach((document) {
-      prod.id = document.data()["id"];
+      prod.setID = document.data()["id"];
       obterDadosProduto.documents.forEach((document1) {
-        if (prod.id == document1.documentID) {
+        if (prod.getID == document1.documentID) {
           prod = Produto.buscarFirebase(document1);
         }
       });

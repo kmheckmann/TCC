@@ -58,18 +58,18 @@ class CategoriaController {
     }
   }
 
-  Future<Null> obterCategoriaPorDescricao(String descricao) async {
+  Future<Null> obterCategoria(String id) async {
+    Categoria c;
     //Usado para obter os dados da categoria selecionada no produto
-    //Como não existe mais de uma categoria com a mesma descrição
-    //não há problema em procurar pela descrição e não pelo ID
-    CollectionReference ref = FirebaseFirestore.instance.collection("categorias");
-    QuerySnapshot eventsQuery =
-        await ref.where("descricao", isEqualTo: descricao).get();
+    if (id.contains(" - ")) {
+      var array = id.split(" - ");
+      id = array[0];
+    }
 
-    eventsQuery.docs.forEach((document) {
-      Categoria c = Categoria.buscarFirebase(document);
-      c.setID = document.id;
-      categoria = c;
-    });
+    DocumentSnapshot doc =
+        await FirebaseFirestore.instance.collection("categorias").doc(id).get();
+    categoria.setID = id;
+    categoria.setDescricao = doc.data()["descricao"];
+    categoria.setAtiva = doc.data()["ativa"];
   }
 }

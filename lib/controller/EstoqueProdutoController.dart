@@ -78,7 +78,7 @@ class EstoqueProdutoController {
     //Obtém todos os estoque disponiveis
     CollectionReference ref = Firestore.instance
         .collection("produtos")
-        .document(p.id)
+        .document(p.getID)
         .collection("estoque");
     QuerySnapshot _obterEstoque =
         await ref.where("quantidade", isGreaterThan: 0).getDocuments();
@@ -159,7 +159,7 @@ class EstoqueProdutoController {
           estoques[contador].quantidade = 0;
         }
         Map<String, dynamic> mapa = converterParaMapa(estoques[contador]);
-        salvarEstoqueProduto(mapa, prod.id, estoques[contador].id);
+        salvarEstoqueProduto(mapa, prod.getID, estoques[contador].id);
         contador += 1;
       } while (qtdeDesejada != 0);
     });
@@ -181,7 +181,7 @@ class EstoqueProdutoController {
         prod = _controllerProduto.produto;
         //prod = await _controllerProduto.obterProdutoPorID(item.data["id"]);
         print("1 aqui");
-        print(prod.descricao);
+        print(prod.getDescricao);
         print(item.data()["quantidade"]);
         //Contador da lista
         //recebe a quantidade desejada do produto
@@ -227,6 +227,6 @@ class EstoqueProdutoController {
     });
 
     precoVenda =
-        ((p.percentualLucro / 100) * maiorPrecoCompra) + maiorPrecoCompra;
+        ((p.getPercentLucro / 100) * maiorPrecoCompra) + maiorPrecoCompra;
   }
 }

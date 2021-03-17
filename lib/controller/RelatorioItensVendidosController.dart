@@ -63,12 +63,12 @@ class RelatorioItensVendidosController {
     print(itensPedidoVendaAux);
     lista.forEach((element) {
       if (itensPedidoVendaAux.containsKey(
-          element.produto.id + ' - ' + element.labelListaProdutos)) {
-        String key = element.produto.id + ' - ' + element.labelListaProdutos;
+          element.produto.getID + ' - ' + element.labelListaProdutos)) {
+        String key = element.produto.getID + ' - ' + element.labelListaProdutos;
         int novaQtde = itensPedidoVendaAux[key] += element.quantidade;
         itensPedidoVendaAux[key] = novaQtde;
       } else {
-        itensPedidoVendaAux[element.produto.id +
+        itensPedidoVendaAux[element.produto.getID +
             ' - ' +
             element.labelListaProdutos] = element.quantidade;
       }

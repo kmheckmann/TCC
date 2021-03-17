@@ -1,6 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:tcc_3/acessorios/Campos.dart';
+import 'package:tcc_3/acessorios/Cores.dart';
+import 'package:tcc_3/acessorios/Mensagens.dart';
 import 'package:tcc_3/controller/CategoriaController.dart';
+import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/controller/ProdutoController.dart';
 import 'package:tcc_3/model/Categoria.dart';
 import 'package:tcc_3/model/Produto.dart';
@@ -17,21 +21,26 @@ class TelaCRUDProduto extends StatefulWidget {
 }
 
 class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
-  Produto produto;
   final DocumentSnapshot snapshot;
+  Produto produto;
 
   _TelaCRUDProdutoState({this.produto, this.snapshot});
 
   final _validadorCampos = GlobalKey<FormState>();
   final _scaffold = GlobalKey<ScaffoldState>();
-  final _controllerCodigo = TextEditingController();
+  final _controllerID = TextEditingController();
   final _controllerDescricao = TextEditingController();
   final _controllerCodBarra = TextEditingController();
   final _controllerPercentualLucro = TextEditingController();
+
   ProdutoController controllerProduto = ProdutoController();
   CategoriaController controllerCategoria = CategoriaController();
+  ObterProxIDController obterProxID = ObterProxIDController();
+  Mensagens msg = Mensagens();
+  Campos campos = Campos();
+  Cores cores = Cores();
+
   Categoria categoria;
-  bool _existeCadastroCodigo;
   bool _existeCadastroCodigoBarra;
   bool _novocadastro;
   String _nomeTela;
@@ -40,22 +49,22 @@ class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
   @override
   void initState() {
     super.initState();
-    _existeCadastroCodigo = false;
-    _existeCadastroCodigoBarra = false;
 
     if (produto != null) {
       _nomeTela = "Editar Produto";
       _novocadastro = false;
-      categoria = produto.categoria;
-      _controllerCodigo.text = produto.codigo.toString();
-      _controllerCodBarra.text = produto.codBarra.toString();
-      _controllerPercentualLucro.text = produto.percentualLucro.toString();
-      _dropdownValueCategoria = produto.categoria.getDescricao;
-      _controllerDescricao.text = produto.descricao;
+      categoria = produto.getCategoria;
+      _controllerID.text = produto.getID;
+      _controllerCodBarra.text = produto.getCodBarra.toString();
+      _controllerPercentualLucro.text = produto.getPercentLucro.toString();
+      _dropdownValueCategoria = produto.getCategoria.getID +
+          ' - ' +
+          produto.getCategoria.getDescricao;
+      _controllerDescricao.text = produto.getDescricao;
     } else {
       _nomeTela = "Cadastrar Produto";
       produto = Produto();
-      produto.ativo = true;
+      produto.setAtivo = true;
       _novocadastro = true;
     }
   }
@@ -71,42 +80,15 @@ class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
       floatingActionButton: FloatingActionButton(
           child: Icon(Icons.save),
           backgroundColor: Colors.blue,
-          onPressed: () async {
-            await controllerCategoria
-                .obterCategoriaPorDescricao(_dropdownValueCategoria);
-            this.categoria = controllerCategoria.categoria;
-            if (_validadorCampos.currentState.validate()) {
-              if (_dropdownValueCategoria != null) {
-                Map<String, dynamic> mapa =
-                    controllerProduto.converterParaMapa(produto);
-                Map<String, dynamic> mapaCategoria = Map();
-                mapaCategoria["id"] = categoria.getID;
-                if (_novocadastro) {
-                  await controllerProduto.obterProxID();
-                  produto.id = controllerProduto.proxID;
-                  controllerProduto.salvarProduto(
-                      mapa, mapaCategoria, produto.id);
-                } else {
-                  controllerProduto.editarProduto(
-                      mapa, mapaCategoria, produto.id);
-                }
-                Navigator.of(context).pop();
-              } else {
-                _scaffold.currentState.showSnackBar(SnackBar(
-                  content: Text("É necessário selecionar uma Categoria!"),
-                  backgroundColor: Colors.red,
-                  duration: Duration(seconds: 5),
-                ));
-              }
-            }
+          onPressed: () {
+            _codigoBotaoSalvar();
           }),
       body: Form(
         key: _validadorCampos,
         child: ListView(
           padding: EdgeInsets.all(8.0),
           children: <Widget>[
-            _criarCampoText(
-                _controllerCodigo, "Código", TextInputType.number, true),
+            campos.campoTextoDesabilitado(_controllerID, "Código", false),
             _criarCampoText(
                 _controllerDescricao, "Descrição", TextInputType.text, true),
             _criarCampoText(_controllerCodBarra, "Código de Barra",
@@ -121,51 +103,75 @@ class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
     );
   }
 
+  void _codigoBotaoSalvar() async {
+    if (_dropdownValueCategoria != null) {
+      await controllerCategoria.obterCategoria(_dropdownValueCategoria);
+      this.categoria = controllerCategoria.categoria;
+    }
+
+    if (_controllerCodBarra.text.isNotEmpty) {
+      await controllerProduto.verificarExistenciaCodigoBarrasProduto(
+          produto.getCodBarra, _novocadastro);
+      _existeCadastroCodigoBarra = controllerProduto.existeCadastroCodigoBarra;
+    }
+
+    if (_validadorCampos.currentState.validate()) {
+      if (_dropdownValueCategoria != null) {
+        Map<String, dynamic> mapa =
+            controllerProduto.converterParaMapa(produto);
+        Map<String, dynamic> mapaCategoria = Map();
+        mapaCategoria["id"] = categoria.getID;
+        if (_novocadastro) {
+          await obterProxID.obterProxID("produtos");
+          produto.setID = obterProxID.proxID;
+          controllerProduto.persistirProduto(
+              mapa, mapaCategoria, produto.getID);
+        } else {
+          controllerProduto.persistirProduto(
+              mapa, mapaCategoria, produto.getID);
+        }
+        Navigator.of(context).pop();
+      } else {
+        msg.exibirBarraMensagem(
+            "É necessário selecionar uma Categoria!", Colors.red, _scaffold);
+      }
+    }
+  }
+
   Widget _criarCampoText(TextEditingController controller, String nome,
       TextInputType tipo, bool enabled) {
     return Container(
-        padding: EdgeInsets.all(6.0),
         child: TextFormField(
-          enabled: enabled,
-          controller: controller,
-          keyboardType: tipo,
-          decoration: InputDecoration(
-            hintText: nome,
-          ),
-          style: TextStyle(color: Colors.black, fontSize: 17.0),
-          validator: (text) {
-            if (text.isEmpty) return "É necessário informar este campo!";
-            if (nome == "Código" && _existeCadastroCodigo && text.isNotEmpty)
-              return "Já existe um produto com esse código, verifique!";
-            if (nome == "Código de Barra" &&
-                _existeCadastroCodigoBarra &&
-                text.isNotEmpty)
-              return "Já existe um produto com esse código de barras, verifique!";
-          },
-          onChanged: (texto) async {
-            switch (nome) {
-              case "Descrição":
-                produto.descricao = texto;
-                break;
-              case "Código":
-                produto.codigo = int.parse(texto);
-                await controllerProduto
-                    .verificarExistenciaCodigoProduto(produto.codigo);
-                _existeCadastroCodigo = controllerProduto.existeCadastroCodigo;
-                break;
-              case "Percentual Lucro":
-                produto.percentualLucro = double.parse(texto);
-                break;
-              case "Código de Barra":
-                produto.codBarra = int.parse(texto);
-                await controllerProduto
-                    .verificarExistenciaCodigoBarrasProduto(produto.codBarra);
-                _existeCadastroCodigoBarra =
-                    controllerProduto.existeCadastroCodigoBarra;
-                break;
-            }
-          },
-        ));
+      enabled: enabled,
+      controller: controller,
+      keyboardType: tipo,
+      decoration: InputDecoration(
+          hintText: nome,
+          labelText: nome,
+          labelStyle:
+              TextStyle(color: cores.corLabel(), fontWeight: FontWeight.w400)),
+      style: TextStyle(color: cores.corCampo(enabled), fontSize: 17.0),
+      validator: (text) {
+        if (text.isEmpty) return "É necessário informar este campo!";
+        if (nome == "Código de Barra" &&
+            _existeCadastroCodigoBarra &&
+            text.isNotEmpty)
+          return "Já existe um produto com esse código de barras, verifique!";
+      },
+      onChanged: (texto) async {
+        switch (nome) {
+          case "Descrição":
+            produto.setDescricao = texto.toUpperCase();
+            break;
+          case "Percentual Lucro":
+            produto.setPercentLucro = double.parse(texto);
+            break;
+          case "Código de Barra":
+            produto.setCodBarra = int.parse(texto);
+            break;
+        }
+      },
+    ));
   }
 
   Widget _criarCampoCheckBox() {
@@ -174,13 +180,13 @@ class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
       child: Row(
         children: <Widget>[
           Checkbox(
-            value: produto.ativo == true,
+            value: produto.getAtivo == true,
             onChanged: (bool novoValor) {
               setState(() {
                 if (novoValor) {
-                  produto.ativo = true;
+                  produto.setAtivo = true;
                 } else {
-                  produto.ativo = false;
+                  produto.setAtivo = false;
                 }
               });
             },
@@ -196,7 +202,7 @@ class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
 
   Widget _criarDropDownCategoria() {
     return StreamBuilder<QuerySnapshot>(
-        stream: Firestore.instance
+        stream: FirebaseFirestore.instance
             .collection('categorias')
             .where("ativa", isEqualTo: true)
             .snapshots(),
@@ -206,28 +212,37 @@ class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
               child: CircularProgressIndicator(),
             );
           } else {
-            var length = snapshot.data.documents.length;
-            DocumentSnapshot ds = snapshot.data.documents[length - 1];
+            var length = snapshot.data.docs.length;
+            DocumentSnapshot ds = snapshot.data.docs[length - 1];
             return Container(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.only(top: 5.0),
               child: Row(
                 children: <Widget>[
                   Container(
                     width: 300.0,
                     child: DropdownButton(
                       value: _dropdownValueCategoria,
-                      hint: Text("Selecionar categoria"),
+                      hint: Text(
+                        "Selecionar categoria",
+                        style: TextStyle(
+                            color: cores.corCampo(true), fontSize: 17.0),
+                      ),
                       onChanged: (String newValue) {
                         setState(() {
                           _dropdownValueCategoria = newValue;
                         });
                       },
-                      items: snapshot.data.documents
-                          .map((DocumentSnapshot document) {
+                      items:
+                          snapshot.data.docs.map((DocumentSnapshot document) {
                         return DropdownMenuItem<String>(
-                            value: document.data()['descricao'],
+                            value: document.id +
+                                ' - ' +
+                                document.data()['descricao'],
                             child: Container(
-                              child: Text(document.data()['descricao'],
+                              child: Text(
+                                  document.id +
+                                      ' - ' +
+                                      document.data()['descricao'],
                                   style: TextStyle(color: Colors.black)),
                             ));
                       }).toList(),

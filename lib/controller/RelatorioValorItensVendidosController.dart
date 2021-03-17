@@ -57,13 +57,13 @@ class RelatorioValorItensVendidosController {
   void removerDuplicados(List<ItemPedidoVenda> lista) {
     lista.forEach((element) {
       if (itensPedidoVendaAux.containsKey(
-          element.produto.id + ' - ' + element.labelListaProdutos)) {
-        String key = element.produto.id + ' - ' + element.labelListaProdutos;
+          element.produto.getID + ' - ' + element.labelListaProdutos)) {
+        String key = element.produto.getID + ' - ' + element.labelListaProdutos;
         double novoPreco =
             itensPedidoVendaAux[key] += (element.preco * element.quantidade);
         itensPedidoVendaAux[key] = novoPreco;
       } else {
-        itensPedidoVendaAux[element.produto.id +
+        itensPedidoVendaAux[element.produto.getID +
             ' - ' +
             element.labelListaProdutos] = element.preco * element.quantidade;
       }

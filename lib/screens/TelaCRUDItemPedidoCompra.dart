@@ -55,7 +55,7 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
     if (itemPedido != null) {
       _nomeTela = "Editar Produto";
       vlItemAntigo = itemPedido.preco;
-      _dropdownValueProduto = itemPedido.produto.descricao;
+      _dropdownValueProduto = itemPedido.produto.getDescricao;
       _controllerPreco.text = itemPedido.preco.toString();
       _controllerQtde.text = itemPedido.quantidade.toString();
       _novocadastro = false;
@@ -98,7 +98,7 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
                       _controllerItemPedido.persistirItem(
                           itemPedido,
                           pedidoCompra.id,
-                          produto.id,
+                          produto.getID,
                           _controllerPedido.converterParaMapa(pedidoCompra));
                     } else {
                       _controllerPedido.atualizarPrecoNoVlTotal(
@@ -110,7 +110,7 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
                       _controllerItemPedido.persistirItem(
                           itemPedido,
                           pedidoCompra.id,
-                          produto.id,
+                          produto.getID,
                           _controllerPedido.converterParaMapa(pedidoCompra));
                     }
                     Navigator.of(context).pop(MaterialPageRoute(

@@ -27,7 +27,6 @@ class _TelaCRUDCategoriaState extends State<TelaCRUDCategoria> {
   CategoriaController controllerCategoria = CategoriaController();
   Cores cores = Cores();
   Campos campos = Campos();
-  Mensagens msg = Mensagens();
 
   final _controllerDescricao = TextEditingController();
   final _controllerID = TextEditingController();

@@ -18,6 +18,6 @@ class ItemPedidoVenda extends ItemPedido {
     quantidade = document.data()["quantidade"];
     preco = document.data()["preco"];
     produto = Produto();
-    produto.id = document.data()["id"];
+    produto.setID = document.data()["id"];
   }
 }
