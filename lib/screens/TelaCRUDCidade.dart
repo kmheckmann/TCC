@@ -92,7 +92,7 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
     //verifica se a já existe uma cidade com as mesma informações
     if (_dropdownValue != null && _controllerNome.text.isNotEmpty) {
       await _controllerCidade.verificarExistenciaCidade(cidade, _novocadastro);
-      _existeCadastro = _controllerCidade.existeCadastro;
+      _existeCadastro = _controllerCidade.getExisteCad;
     }
 
     //Faz a validação do form (propriedade validador do FormTextField)

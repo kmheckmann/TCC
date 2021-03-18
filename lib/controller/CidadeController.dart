@@ -2,8 +2,24 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tcc_3/model/Cidade.dart';
 
 class CidadeController {
-  Cidade cidade = Cidade();
-  bool existeCadastro;
+  Cidade _cidade = Cidade();
+  bool _existeCadastro;
+
+  Cidade get getCidade {
+    return _cidade;
+  }
+
+  set setCidade(Cidade c) {
+    _cidade = c;
+  }
+
+  bool get getExisteCad {
+    return _existeCadastro;
+  }
+
+  set setExisteCad(bool existeCad) {
+    _existeCadastro = existeCad;
+  }
 
   CidadeController();
 
@@ -45,15 +61,15 @@ class CidadeController {
       if (document.data()['estado'] == estado) {
         Cidade c = Cidade.buscarFirebase(document);
         c.setID = document.id;
-        cidade = c;
+        _cidade = c;
       }
     });
   }
 
   Future<Null> verificarExistenciaCidade(Cidade cid, bool novoCad) async {
-    existeCadastro = true;
+    _existeCadastro = true;
     Cidade c = Cidade();
-    List<Cidade> cidades = List<Cidade>();
+    List<Cidade> cidades = [];
 
     //Busca todas as cidades cadastradas
     CollectionReference ref = FirebaseFirestore.instance.collection("cidades");
@@ -74,7 +90,7 @@ class CidadeController {
     if (novoCad) {
       //Quando for um novo cadastro não pode existir nenhuma outra cidade com o mesmo nome e stado
       //entao o tamanho da lista da cidade deve ser 0 para permitir adicionar o registro
-      if (cidades.length == 0 || cidades.isEmpty) existeCadastro = false;
+      if (cidades.length == 0 || cidades.isEmpty) _existeCadastro = false;
     } else {
       //Se não for um novo cadastro, já existe 1 registro,
       //Existe a possibilidade do usuario alterar o texto e depois tentar voltar ao original
@@ -82,12 +98,12 @@ class CidadeController {
       //Se forem diferentes, será informado que o cadastro já existe e não será possível salvar
       //Se forem iguais, permite salvar
       if (cidades.length == 1 && cidades[0].getID == cid.getID) {
-        existeCadastro = false;
+        _existeCadastro = false;
       } else {
         //Se não for novo cadastro, ou seja, é edição, e a lista nao tiver registros
         //Nao
         if (cidades.length == 0) {
-          existeCadastro = false;
+          _existeCadastro = false;
         }
       }
     }

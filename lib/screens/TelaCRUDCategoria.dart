@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tcc_3/acessorios/Campos.dart';
 import 'package:tcc_3/acessorios/Cores.dart';
-import 'package:tcc_3/acessorios/Mensagens.dart';
 import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/controller/CategoriaController.dart';
 import 'package:tcc_3/model/Categoria.dart';
@@ -88,7 +87,7 @@ class _TelaCRUDCategoriaState extends State<TelaCRUDCategoria> {
       //Verifica se já existe um categoria com as mesmas informações
       await controllerCategoria.verificarExistenciaCategoria(
           categoria, _novocadastro);
-      _existeCadastro = controllerCategoria.existeCadastro;
+      _existeCadastro = controllerCategoria.getExisteCad;
     }
 
     //verifica se os criterios para permitir salvar um registro foram preenchidos

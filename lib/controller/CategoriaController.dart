@@ -2,8 +2,24 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tcc_3/model/Categoria.dart';
 
 class CategoriaController {
-  bool existeCadastro;
-  Categoria categoria = Categoria();
+  bool _existeCadastro;
+  Categoria _categoria = Categoria();
+
+  bool get getExisteCad {
+    return _existeCadastro;
+  }
+
+  set setExisteCad(bool existeCad) {
+    _existeCadastro = existeCad;
+  }
+
+  Categoria get getCategoria {
+    return _categoria;
+  }
+
+  set setCategoria(Categoria cat) {
+    _categoria = cat;
+  }
 
   CategoriaController();
 
@@ -28,7 +44,7 @@ class CategoriaController {
 
   Future<Null> verificarExistenciaCategoria(
       Categoria categoria, bool novoCad) async {
-    existeCadastro = false;
+    _existeCadastro = false;
     //Busca todas as categoria cadastradas
     CollectionReference ref =
         FirebaseFirestore.instance.collection("categorias");
@@ -40,7 +56,7 @@ class CategoriaController {
       //Se for um novo cadastro a quantidade de registros nao pode ser maior que zero
       //pois não pode existir registros com a mesma descricao
       if (eventsQuery.docs.length > 0) {
-        existeCadastro = true;
+        _existeCadastro = true;
       }
     } else {
       //Se não for um novo cadastro, já existe 1 registro,
@@ -51,7 +67,7 @@ class CategoriaController {
       if (eventsQuery.docs.length == 1) {
         eventsQuery.docs.forEach((document) {
           if (document.id != categoria.getID) {
-            existeCadastro = true;
+            _existeCadastro = true;
           }
         });
       }
@@ -68,8 +84,8 @@ class CategoriaController {
 
     DocumentSnapshot doc =
         await FirebaseFirestore.instance.collection("categorias").doc(id).get();
-    categoria.setID = id;
-    categoria.setDescricao = doc.data()["descricao"];
-    categoria.setAtiva = doc.data()["ativa"];
+    _categoria.setID = id;
+    _categoria.setDescricao = doc.data()["descricao"];
+    _categoria.setAtiva = doc.data()["ativa"];
   }
 }

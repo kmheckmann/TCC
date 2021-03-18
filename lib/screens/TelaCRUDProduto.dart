@@ -106,7 +106,7 @@ class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
   void _codigoBotaoSalvar() async {
     if (_dropdownValueCategoria != null) {
       await controllerCategoria.obterCategoria(_dropdownValueCategoria);
-      this.categoria = controllerCategoria.categoria;
+      this.categoria = controllerCategoria.getCategoria;
     }
 
     if (_controllerCodBarra.text.isNotEmpty) {

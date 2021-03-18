@@ -99,11 +99,11 @@ class _TelaProdutosState extends State<TelaProdutos> {
         ),
       ),
       onTap: () async {
-        CategoriaController _catCOntroller = CategoriaController();
+        CategoriaController _catController = CategoriaController();
         await _prodController.obterCategoria(p.getID);
-        await _catCOntroller
+        await _catController
             .obterCategoria(_prodController.getIdCategoriaProduto);
-        p.setCategoria = _catCOntroller.categoria;
+        p.setCategoria = _catController.getCategoria;
         Navigator.push(
           context,
           MaterialPageRoute(

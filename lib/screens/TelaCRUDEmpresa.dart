@@ -101,7 +101,7 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
                 if (_dropdownValue != null) {
                   //Obtém todas as informações da cidade do dropdown
                   await _controllerCidade.obterCidadePorNomeEstado(_dropdownValue);
-                  empresa.cidade = _controllerCidade.cidade;
+                  empresa.cidade = _controllerCidade.getCidade;
 
                   //Transforma as informações da empresa e da cidade para mapa para salvar no firebase
                   Map<String, dynamic> mapaCidade = Map();
