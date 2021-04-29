@@ -88,14 +88,14 @@ class RotaController {
     QuerySnapshot obterClienteRota = await ref.getDocuments();
 
     for (var document in obterClienteRota.documents) {
-      cliente.id = document.data()["id"];
+      cliente.setId = document.data()["id"];
 
       CollectionReference refCliente =
           Firestore.instance.collection('empresas');
       QuerySnapshot obterDadosEmpresa = await refCliente.getDocuments();
 
       for (var document in obterDadosEmpresa.documents) {
-        if (cliente.id == document.documentID) {
+        if (cliente.getId == document.documentID) {
           cliente = Empresa.buscarFirebase(document);
           return Future.value(cliente);
         }

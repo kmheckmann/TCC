@@ -42,6 +42,22 @@ class CidadeController {
         .set(dadosCidade);
   }
 
+  Future<Null> obterCidade(String valor) async {
+    String id = valor;
+    if (valor.contains(" - ")) {
+      var array = valor.split(" - ");
+      id = array[0];
+      String nome = array[1];
+    }
+
+    DocumentSnapshot doc =
+        await FirebaseFirestore.instance.collection("cidades").doc(id).get();
+    _cidade.setID = id;
+    _cidade.setEstado = doc.data()["estado"];
+    _cidade.setAtiva = doc.data()["ativa"];
+    _cidade.setNome = doc.data()["nome"];
+  }
+
   Future<Null> obterCidadePorNomeEstado(String nomeEestado) async {
     //Utilizado pelo cadastro de empresas,
     //para saber qual os dados da cidade selecionada no comboBox
@@ -101,7 +117,7 @@ class CidadeController {
         _existeCadastro = false;
       } else {
         //Se não for novo cadastro, ou seja, é edição, e a lista nao tiver registros
-        //Nao
+        //Informa que nao tem outro registro com mesmo nome
         if (cidades.length == 0) {
           _existeCadastro = false;
         }

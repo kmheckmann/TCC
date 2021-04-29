@@ -57,7 +57,7 @@ class _TelaCRUDRotaState extends State<TelaCRUDRota> {
       _dropdownValueDiaSemana = rota.getDiaSemana;
       _dropdownValueVendedor =
           rota.getVendedor.getNome + " - " + rota.getVendedor.getCPF;
-      _dropdownValueCliente = rota.getCliente.razaoSocial;
+      _dropdownValueCliente = rota.getCliente.getRazaoSocial;
       _atribuirValorFrquencia(rota.getFrequencia);
       _novocadastro = false;
     } else {
@@ -95,7 +95,7 @@ class _TelaCRUDRotaState extends State<TelaCRUDRota> {
                     .obterEmpresaPorDescricao(_dropdownValueCliente);
                 vendedor = await _controllerUsuario
                     .obterUsuarioPorCPF(_dropdownValueVendedor);
-                await _controllerRota.verificarExistenciaRota(cliente.id, rota);
+                await _controllerRota.verificarExistenciaRota(cliente.getId, rota);
                 _clienteComRota = _controllerRota.existeRota;
                 //depois dos campos verifica se outro vendedor não realiza a rota para o cliente selecionado
                 if (_clienteComRota == false) {
@@ -366,13 +366,13 @@ class _TelaCRUDRotaState extends State<TelaCRUDRota> {
 
   void _fazerPersistencia() async {
     //faz as atribuições necessárias para ter todos os dados que serão salvos no firebase
-    rota.setTituloRota = vendedor.getNome + " - " + cliente.razaoSocial;
+    rota.setTituloRota = vendedor.getNome + " - " + cliente.getRazaoSocial;
     rota.setIDV = vendedor.getID;
     Map<String, dynamic> mapa = _controllerRota.converterParaMapa(rota);
     Map<String, dynamic> mapaVendedor = Map();
     mapaVendedor["id"] = vendedor.getID;
     Map<String, dynamic> mapaCliente = Map();
-    mapaCliente["id"] = cliente.id;
+    mapaCliente["id"] = cliente.getId;
     if (_novocadastro) {
       //se for um novo cadastro gera novo id
       rota.setIdFirebase = await _controllerRota.obterProxID();
@@ -396,7 +396,7 @@ class _TelaCRUDRotaState extends State<TelaCRUDRota> {
 
   Widget _campoCliente() {
     if(!_novocadastro){
-      _controllerCliente.text = rota.getCliente.razaoSocial;
+      _controllerCliente.text = rota.getCliente.getRazaoSocial;
     }
     
     if (user.getEhAdm) {

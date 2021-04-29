@@ -68,7 +68,7 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
       _controllerVendedor.text = pedidoVenda.user.getNome;
       _dropdownValueTipoPgto = pedidoVenda.tipoPagamento;
       _dropdownValueTipoPedido = pedidoVenda.tipoPedido;
-      _dropdownValueFornecedor = pedidoVenda.empresa.razaoSocial;
+      _dropdownValueFornecedor = pedidoVenda.empresa.getRazaoSocial;
       _controllerVlTotalDesc.text = pedidoVenda.valorComDesconto.toString();
       _novocadastro = false;
       _vlCheckBox = pedidoVenda.pedidoFinalizado;
@@ -328,7 +328,7 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
   }
 
   void _codigoBotaoSalvar() async {
-    empresa = _controllerEmpresa.emp;
+    empresa = _controllerEmpresa.getEmp;
     // método criado para não precisar repetir duas vezes o mesmo codigo na hora que clica no salvar
     if (_dropdownValueTipoPgto != null &&
         _dropdownValueFornecedor != null &&
@@ -337,7 +337,7 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
       Map<String, dynamic> mapaVendedor = Map();
       mapaVendedor["id"] = vendedor.getID;
       Map<String, dynamic> mapaEmpresa = Map();
-      mapaEmpresa["id"] = empresa.id;
+      mapaEmpresa["id"] = empresa.getId;
       pedidoVenda.pedidoFinalizado = _vlCheckBox;
 
       if (_novocadastro) {
@@ -441,7 +441,7 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
   }
 
   Widget _campoCliente() {
-    _controllerCliente.text = pedidoVenda.empresa.nomeFantasia;
+    _controllerCliente.text = pedidoVenda.empresa.getNomeFantasia;
     //se o pedido estiver finalizado sera criado um TextField com o valor
     //se não estiver, sera criado o dropDown
     if (pedidoVenda.pedidoFinalizado) {

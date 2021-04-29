@@ -1,37 +1,86 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:tcc_3/model/Cidade.dart';
+import 'package:flutter/material.dart';
 import 'package:tcc_3/model/Empresa.dart';
 import 'package:cpfcnpj/cpfcnpj.dart';
 
 class EmpresaController {
   EmpresaController();
-  Empresa empresa = Empresa();
-  Cidade cidade = Cidade();
-  bool existeCadastroCNPJ = true;
-  bool existeCadastroIE = true;
-  Empresa emp;
+  Empresa _empresa = Empresa();
+  bool _existeCadastroCNPJ = true;
+  bool _existeCadastroIE = true;
+  bool _existeCadastroRazaoSocial = true;
+  Empresa _emp;
+  String _idCidadeEmpresa;
+
+  String get getCidadeEmpresa {
+    return _idCidadeEmpresa;
+  }
+
+  set setCidadeEmpresa(String cidadeEmpresa) {
+    _idCidadeEmpresa = cidadeEmpresa;
+  }
+
+  Empresa get getEmpresa {
+    return _empresa;
+  }
+
+  set setEmpresa(Empresa empresa) {
+    _empresa = empresa;
+  }
+
+  Empresa get getEmp {
+    return _emp;
+  }
+
+  set setEmp(Empresa emp) {
+    _emp = emp;
+  }
+
+  bool get getExisteCadastroIE {
+    return _existeCadastroIE;
+  }
+
+  set setExisteCadastroIE(bool existeCadastroIE) {
+    _existeCadastroIE = existeCadastroIE;
+  }
+
+  bool get getExisteCadastroRazaoSocial {
+    return _existeCadastroRazaoSocial;
+  }
+
+  set setExisteCadastroRazaoSocial(bool existeCadastroRazaoSocial) {
+    _existeCadastroRazaoSocial = existeCadastroRazaoSocial;
+  }
+
+  bool get getExisteCadastroCNPJ {
+    return _existeCadastroCNPJ;
+  }
+
+  set setExisteCadastroCNPJ(bool existeCadastroCNPJ) {
+    _existeCadastroCNPJ = existeCadastroCNPJ;
+  }
 
   Map<String, dynamic> dadosEmpresa = Map();
   Map<String, dynamic> dadosCidade = Map();
 
   Map<String, dynamic> converterParaMapa(Empresa e) {
     return {
-      "razaoSocial": e.razaoSocial,
-      "nomeFantasia": e.nomeFantasia,
-      "cnpj": e.cnpj,
-      "inscEstadual": e.inscEstadual,
-      "cep": e.cep,
-      "bairro": e.bairro,
-      "logradouro": e.logradouro,
-      "numero": e.numero,
-      "telefone": e.telefone,
-      "email": e.email,
-      "ativo": e.ativo,
-      "ehFornecedor": e.ehFornecedor
+      "razaoSocial": e.getRazaoSocial,
+      "nomeFantasia": e.getNomeFantasia,
+      "cnpj": e.getCnpj,
+      "inscEstadual": e.getInscEstadual,
+      "cep": e.getCep,
+      "bairro": e.getBairro,
+      "logradouro": e.getLogradouro,
+      "numero": e.getNumero,
+      "telefone": e.getTelefone,
+      "email": e.getEmail,
+      "ativo": e.getAtivo,
+      "ehFornecedor": e.getEhFornecedor
     };
   }
 
-  Future<Null> salvarEmpresa(Map<String, dynamic> dadosEmpresa,
+  Future<Null> persistirEmpresa(Map<String, dynamic> dadosEmpresa,
       Map<String, dynamic> dadosCidade) async {
     this.dadosEmpresa = dadosEmpresa;
     this.dadosCidade = dadosCidade;
@@ -48,93 +97,58 @@ class EmpresaController {
         .set(dadosCidade);
   }
 
-  Future<Null> editarEmpresa(Map<String, dynamic> dadosEmpresa,
-      Map<String, dynamic> dadosCidade, String idFirebase) async {
-    this.dadosEmpresa = dadosEmpresa;
-    this.dadosCidade = dadosCidade;
-    await FirebaseFirestore.instance
+  //Método para buscar os valores da cidade na subcoleção dentro da empresa
+  Future<Null> obterIDCidadeEmpresa(String idEmpresa) async {
+    DocumentSnapshot doc = await FirebaseFirestore.instance
         .collection("empresas")
-        .doc(idFirebase)
-        .set(dadosEmpresa);
-
-    await FirebaseFirestore.instance
-        .collection("empresas")
-        .doc(idFirebase)
+        .doc(idEmpresa)
         .collection("cidade")
         .doc("IDcidade")
-        .set(dadosCidade);
+        .get();
+
+    _idCidadeEmpresa = doc.data()["id"];
   }
 
-  //Método para buscar os valores da cidade na subcoleção dentro da empresa
-  Future<Null> obterCidadeEmpresa(String idEmpresa) async {
-    Cidade c = Cidade();
-    CollectionReference ref = FirebaseFirestore.instance
-        .collection('empresas')
-        .doc(idEmpresa)
-        .collection('cidade');
-    QuerySnapshot obterCidadeDaEmpresa = await ref.get();
-
-    CollectionReference refCidade =
-        FirebaseFirestore.instance.collection('cidades');
-    QuerySnapshot obterDadosCidade = await refCidade.get();
-
-    obterCidadeDaEmpresa.docs.forEach((document) {
-      c.setID = document.data()["id"];
-
-      obterDadosCidade.docs.forEach((document1) {
-        if (c.getID == document1.id) {
-          c = Cidade.buscarFirebase(document1);
-        }
-      });
+  Future verificarExistenciaCNPJ(String cnpj, VoidCallback terminou) async {
+    await FirebaseFirestore.instance
+        .collection("empresas")
+        .doc(cnpj)
+        .get()
+        .then((doc) {
+      if (!doc.exists) {
+        _existeCadastroCNPJ = false;
+      }
+      terminou();
     });
-    this.cidade = c;
   }
 
-  Future<Null> verificarExistenciaEmpresa(Empresa e, bool novoCadastro) async {
-    Empresa emp;
-    //Duas listas criadas para indicar corretamente ao usuario se já existe uma empresa com só com o mesmo CNPJ
-    //Se existe uma empresa só com a mesma Inscrição Estadual ou ambos
-    List<Empresa> empresasMesmoCNPJ = List<Empresa>();
-    List<Empresa> empresasMesmaInscEstadual = List<Empresa>();
-    //Busca todas as empresas cadastradas
+  Future verificarExistenciaInscEstadual(
+      String ie, VoidCallback terminou) async {
+    await FirebaseFirestore.instance
+        .collection("empresas")
+        .where("inscEstadual", isEqualTo: ie)
+        .get()
+        .then((query) {
+      if (query.docs.length == 0 || query == null) {
+        _existeCadastroIE = false;
+      }
+      terminou();
+    });
+  }
+
+  Future verificarExistenciaRazaoSocial(
+      String razaoSocial, VoidCallback terminou) async {
     CollectionReference ref = FirebaseFirestore.instance.collection("empresas");
-    QuerySnapshot eventsQuery = await ref.get();
-
-    eventsQuery.docs.forEach((document) {
-      //Para cada empresa retornada verificar se o CNPJ ou inscrição estadual
-      //são iguais ao que está tentando ser atribuído ao novo cadastro
-      //Se for, adiciona na lista correspondente
-      if (document.data()["cnpj"] == e.cnpj) {
-        emp = Empresa.buscarFirebase(document);
-        emp.id = document.id;
-        empresasMesmoCNPJ.add(emp);
+    //Obtem empresas com mesma razão social
+    await ref
+        .where("razaoSocial", isEqualTo: razaoSocial)
+        .get()
+        .then((eventsQuery) {
+      if (eventsQuery.docs.length == 0 || eventsQuery == null) {
+        _existeCadastroRazaoSocial = false;
       }
-
-      if (document.data()["inscEstadual"] == e.inscEstadual) {
-        emp = Empresa.buscarFirebase(document);
-        emp.id = document.id;
-        empresasMesmaInscEstadual.add(emp);
-      }
+      terminou();
     });
-
-    if (novoCadastro) {
-      //Quando for um novo cadastro não pode existir nenhuma outra empresa com o mesmo cnpj e inscrição estadual
-      //entao o tamanho da lista da empresa deve ser 0 para permitir adicionar o registro
-      if (empresasMesmoCNPJ.length == 0 || empresasMesmoCNPJ.isEmpty)
-        existeCadastroCNPJ = false;
-      if (empresasMesmaInscEstadual.length == 0 ||
-          empresasMesmaInscEstadual.isEmpty) existeCadastroIE = false;
-    } else {
-      //Se não for um novo cadastro, já existe 1 registro,
-      //Existe a possibilidade do usuario alterar o valor e depois tentar voltar ao original
-      //Para tratar isso será comparado o ID do cadastro existente com o que esta sendo alterado
-      //Se forem diferentes, será informado que o cadastro já existe e não será possível salvar
-      //Se forem iguais, permite salvar
-      if (empresasMesmaInscEstadual.length == 1 &&
-          empresasMesmaInscEstadual[0].id == e.id) existeCadastroIE = false;
-      if (empresasMesmoCNPJ.length == 1 && empresasMesmoCNPJ[0].id == e.id)
-        existeCadastroCNPJ = false;
-    }
   }
 
   //Método utilizado pela tela te pedidos
@@ -145,10 +159,10 @@ class EmpresaController {
         await ref.where("razaoSocial", isEqualTo: nomeEmpresa).get();
 
     eventsQuery.docs.forEach((document) {
-      emp = Empresa.buscarFirebase(document);
-      emp.id = document.id;
+      _emp = Empresa.buscarFirebase(document);
+      _emp.setId = document.id;
     });
-    return Future.value(emp);
+    return Future.value(_emp);
   }
 
   bool validarCNPJ(String cnpj) {

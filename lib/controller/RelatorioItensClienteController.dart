@@ -11,7 +11,7 @@ class RelatorioItensClienteController extends RelatorioItensVendidosController {
     pedidos.clear();
     CollectionReference ref = FirebaseFirestore.instance.collection('pedidos');
     QuerySnapshot obterPedidos =
-        await ref.where("label", isEqualTo: c.razaoSocial).get();
+        await ref.where("label", isEqualTo: c.getRazaoSocial).get();
 
     obterPedidos.docs.forEach((document) {
       if (document.data()["ehPedidoVenda"] == true) {

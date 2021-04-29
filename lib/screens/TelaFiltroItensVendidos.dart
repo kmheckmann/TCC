@@ -87,7 +87,7 @@ class _TelaFiltroItensVendidosState extends State<TelaFiltroItensVendidos> {
 
   void _filtraPorCliente() async {
     await _controllerEmpresa.obterEmpresaPorDescricao(_dropdownValueCliente);
-    empresa = _controllerEmpresa.emp;
+    empresa = _controllerEmpresa.getEmp;
     _controllerRelatorioFiltraCliente.lista.add(['Item', 'Quantidade']);
     _controllerRelatorioFiltraCliente
         .obterPedidosRelatorioPorCliente(empresa, dataInicial, dataFinal)

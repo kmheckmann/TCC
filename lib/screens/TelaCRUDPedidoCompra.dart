@@ -64,7 +64,7 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
       _controllerPercentDesc.text = pedidoCompra.percentualDesconto.toString();
       _controllerVendedor.text = pedidoCompra.user.getNome;
       _dropdownValueTipoPgto = pedidoCompra.tipoPagamento;
-      _dropdownValueFornecedor = pedidoCompra.empresa.nomeFantasia;
+      _dropdownValueFornecedor = pedidoCompra.empresa.getNomeFantasia;
       _controllerVlTotalDesc.text = pedidoCompra.valorComDesconto.toString();
       _novocadastro = false;
       _vlCheckBox = pedidoCompra.pedidoFinalizado;
@@ -116,7 +116,7 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
           onPressed: () async {
             await _controllerEmpresa
                 .obterEmpresaPorDescricao(_dropdownValueFornecedor);
-            empresa = _controllerEmpresa.empresa;
+            empresa = _controllerEmpresa.getEmpresa;
             await _controllerUsuario.obterUsuarioPorCPF(vendedor.getCPF);
             vendedor = _controllerUsuario.usuario;
             pedidoCompra.pedidoFinalizado = _vlCheckBox;
@@ -316,7 +316,7 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
       Map<String, dynamic> mapaVendedor = Map();
       mapaVendedor["id"] = vendedor.getID;
       Map<String, dynamic> mapaEmpresa = Map();
-      mapaEmpresa["id"] = empresa.id;
+      mapaEmpresa["id"] = empresa.getId;
       pedidoCompra.pedidoFinalizado = _vlCheckBox;
 
       if (_novocadastro) {
@@ -374,7 +374,7 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
   }
 
   Widget _campoFornecedor() {
-    _controllerFornecedor.text = pedidoCompra.empresa.nomeFantasia;
+    _controllerFornecedor.text = pedidoCompra.empresa.getNomeFantasia;
     //se o pedido estiver finalizado sera criado um TextField com o valor
     //se não estiver, sera criado o dropDown
     if (pedidoCompra.pedidoFinalizado) {

@@ -73,10 +73,10 @@ abstract class PedidoController {
 //Compara o ID da empresa vinculada ao pedido com as existentes até encontrar o correspondente
 //Após isso busca as outras informações além do ID
     obterEmpresaPedido.documents.forEach((document) {
-      e.id = document.data()["id"];
+      e.setId = document.data()["id"];
 
       obterDadosEmpresa.documents.forEach((document1) {
-        if (e.id == document1.documentID) {
+        if (e.getId == document1.documentID) {
           e = Empresa.buscarFirebase(document1);
         }
       });

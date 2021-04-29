@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:tcc_3/acessorios/Campos.dart';
+import 'package:tcc_3/acessorios/Cores.dart';
+import 'package:tcc_3/acessorios/Mensagens.dart';
 import 'package:tcc_3/controller/CidadeController.dart';
 import 'package:tcc_3/controller/EmpresaController.dart';
 import 'package:tcc_3/model/Cidade.dart';
@@ -24,14 +27,6 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
 
   _TelaCRUDEmpresaState(this.empresa, this.snapshot);
 
-  String _nomeTela;
-  Cidade cidade = Cidade();
-  EmpresaController _controllerEmpresa = EmpresaController();
-  CidadeController _controllerCidade = CidadeController();
-  String _dropdownValue;
-  bool _existeCadastroIE;
-  bool _existeCadastroCNPJ;
-
   //Usa-se controladores de textos para colocar texto nos componentes e obter o que está no componente
   final _scaffold = GlobalKey<ScaffoldState>();
   final _validadorCampos = GlobalKey<FormState>();
@@ -45,32 +40,48 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
   final _controllerNumero = TextEditingController();
   final _controllerTelefone = TextEditingController();
   final _controllerEmail = TextEditingController();
+  final _controllerEstado = TextEditingController();
+
+  Cores cores = Cores();
+  Campos campos = Campos();
+  Mensagens msg = Mensagens();
+  Cidade cidade = Cidade();
+  EmpresaController _controllerEmpresa = EmpresaController();
+  CidadeController _controllerCidade = CidadeController();
+  String _dropdownValue;
+  String _nomeTela;
+  bool _existeCadastroIE;
+  bool _existeCadastroCNPJ;
+  bool _existeCadastroRazaoSocial;
 
   @override
   //Ao chamar esta classe popula-se alguns campos da tela
   void initState() {
     super.initState();
-    _existeCadastroIE = false;
-    _existeCadastroCNPJ = false;
+    _existeCadastroIE = true;
+    _existeCadastroCNPJ = true;
+    _existeCadastroRazaoSocial = true;
     if (empresa != null) {
       _nomeTela = "Editar Empresa";
-      _controllerRazaoSocial.text = empresa.razaoSocial;
-      _controllerNomeFantasia.text = empresa.nomeFantasia;
-      _controllerCnpj.text = empresa.cnpj;
-      _controllerinscEstadual.text = empresa.inscEstadual;
-      _controllerCep.text = empresa.cep;
-      _controllerBairro.text = empresa.bairro;
-      _controllerlogradouro.text = empresa.logradouro;
-      _controllerNumero.text = empresa.numero.toString();
-      _controllerTelefone.text = empresa.telefone;
-      _controllerEmail.text = empresa.email;
-      _dropdownValue = (empresa.cidade.getNome+ ' - ' + empresa.cidade.getEstado);
+      _controllerRazaoSocial.text = empresa.getRazaoSocial;
+      _controllerNomeFantasia.text = empresa.getNomeFantasia;
+      _controllerCnpj.text = empresa.getCnpj;
+      _controllerinscEstadual.text = empresa.getInscEstadual;
+      _controllerCep.text = empresa.getCep;
+      _controllerBairro.text = empresa.getBairro;
+      _controllerlogradouro.text = empresa.getLogradouro;
+      _controllerNumero.text = empresa.getNumero.toString();
+      _controllerTelefone.text = empresa.getTelefone;
+      _controllerEmail.text = empresa.getEmail;
+      _controllerEstado.text = empresa.getCidade.getEstado;
+      _dropdownValue =
+          (empresa.getCidade.getID + ' - ' + empresa.getCidade.getNome);
       _novocadastro = false;
     } else {
       _nomeTela = "Cadastrar Empresa";
       empresa = Empresa();
-      empresa.ativo = true;
-      empresa.ehFornecedor = true;
+      empresa.setAtivo = true;
+      empresa.setEhFornecedor = true;
       _novocadastro = true;
     }
   }
@@ -78,208 +89,178 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        key: _scaffold,
-        appBar: AppBar(
-          title: Text(_nomeTela),
-          centerTitle: true,
-        ),
-        //Botão para salvar
-        floatingActionButton: FloatingActionButton(
-            child: Icon(Icons.save),
-            backgroundColor: Colors.blue,
-            onPressed: () async {
+      key: _scaffold,
+      appBar: AppBar(
+        title: Text(_nomeTela),
+        centerTitle: true,
+      ),
+      //Botão para salvar
+      floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.save),
+          backgroundColor: Colors.blue,
+          onPressed: () async {
+            if (_novocadastro) {
               if (_controllerCnpj.text.isNotEmpty) {
-                _cnpjValido = _controllerEmpresa.validarCNPJ(empresa.cnpj);
-              }
-              //Ao clicar pra salvar realiza a verificação de CNPJ e Inscrição Estadual
-              await _controllerEmpresa.verificarExistenciaEmpresa(
-                  empresa, _novocadastro);
-
-              //Roda o validator de cada campo e verifica se os conteúdos estão de acordo com esperado
-              if (_validadorCampos.currentState.validate()) {
-                //Verifica se o dropdown da cidade tem valor
-                if (_dropdownValue != null) {
-                  //Obtém todas as informações da cidade do dropdown
-                  await _controllerCidade.obterCidadePorNomeEstado(_dropdownValue);
-                  empresa.cidade = _controllerCidade.getCidade;
-
-                  //Transforma as informações da empresa e da cidade para mapa para salvar no firebase
-                  Map<String, dynamic> mapaCidade = Map();
-                  mapaCidade["id"] = empresa.cidade.getID;
-                  Map<String, dynamic> mapa =
-                      _controllerEmpresa.converterParaMapa(empresa);
-
-                  //Verifica qual método para persistir as alterações deve-se chamar
-                  if (_novocadastro) {
-                    _controllerEmpresa.salvarEmpresa(mapa, mapaCidade);
-                  } else {
-                    _controllerEmpresa.editarEmpresa(
-                        mapa, mapaCidade, empresa.id);
-                  }
-                  //Fecha a tela atual e volta para a anterior
-                  Navigator.of(context).pop();
-                } else {
-                  //Se a cidade não for selecionada apresenta uma mensagem e não salva as alterações
-                  if (_dropdownValue == null) {
-                    _scaffold.currentState.showSnackBar(SnackBar(
-                      content: Text("É necessário selecionar uma cidade!"),
-                      backgroundColor: Colors.red,
-                      duration: Duration(seconds: 5),
-                    ));
-                  }
+                _cnpjValido = _controllerEmpresa.validarCNPJ(empresa.getCnpj);
+                if (_cnpjValido) {
+                  await _controllerEmpresa.verificarExistenciaCNPJ(
+                      empresa.getCnpj, whenCompleteCNPJ);
                 }
               }
-            }),
-        body: Form(
-            key: _validadorCampos,
-            child: ListView(
-              padding: EdgeInsets.all(8.0),
-              children: <Widget>[
-                //Faz as chamadas de todos os componentes necessários para criar a tela
-                _criarCampo(_controllerRazaoSocial, TextInputType.text, 200,
-                    "Razão Social"),
-                _criarCampo(_controllerNomeFantasia, TextInputType.text, 200,
-                    "Nome Fantasia"),
-                _criarCampoIE(),
-                _criarCampoCNPJ(),
-                _criarCampo(_controllerCep, TextInputType.number, 8, "CEP"),
-                _criarDropDownCidade(),
-                _criarCampoBairro(),
-                _criarCampo(_controllerlogradouro, TextInputType.text, 100,
-                    "Logradouro"),
-                _criarCampoNumero(),
-                _criarCampoTelefone(),
-                _criarCampoEmail(),
-                _criarCampoCheckBox(),
-                _criarCampoCheckBoxFornecedor(),
-              ],
-            )));
+
+              if (_controllerinscEstadual.text.isNotEmpty) {
+                await _controllerEmpresa.verificarExistenciaInscEstadual(
+                    empresa.getInscEstadual, whenCompleteIE);
+              }
+
+              if (_controllerRazaoSocial.text.isNotEmpty) {
+                await _controllerEmpresa.verificarExistenciaRazaoSocial(
+                    empresa.getRazaoSocial, whenCompleteRazaoSocial);
+              }
+            }
+            //Roda o validator de cada campo e verifica se os conteúdos estão de acordo com esperado
+            if (_validadorCampos.currentState.validate()) {
+              //Verifica se o dropdown da cidade tem valor
+              if (_dropdownValue != null) {
+                //Transforma as informações da empresa e da cidade para mapa para salvar no firebase
+                Map<String, dynamic> mapaCidade = Map();
+                mapaCidade["id"] = empresa.getCidade.getID;
+                Map<String, dynamic> mapa =
+                    _controllerEmpresa.converterParaMapa(empresa);
+
+                //Verifica qual método para persistir as alterações deve-se chamar
+                if (_novocadastro) {
+                  _controllerEmpresa.persistirEmpresa(mapa, mapaCidade);
+                } else {
+                  _controllerEmpresa.persistirEmpresa(mapa, mapaCidade);
+                }
+                //Fecha a tela atual e volta para a anterior
+                Navigator.of(context).pop();
+              } else {
+                //Se a cidade não for selecionada apresenta uma mensagem e não salva as alterações
+                if (_dropdownValue == null) {
+                  msg.exibirBarraMensagem("É necessário selecionar uma cidade!",
+                      Colors.red, _scaffold);
+                }
+              }
+            }
+          }),
+      body: SingleChildScrollView(
+          child: Form(
+              key: _validadorCampos,
+              child: Column(
+                children: [
+                  campos.campoTextoDesabilitado(
+                      _controllerCnpj, "Código", false),
+                  _novocadastro
+                      ? _criarCampoRazaoSocial()
+                      : campos.campoTextoDesabilitado(
+                          _controllerRazaoSocial, "Razão Social", false),
+                  _criarCampo(_controllerNomeFantasia, TextInputType.text, 200,
+                      "Nome Fantasia"),
+                  _novocadastro
+                      ? _criarCampoIE()
+                      : campos.campoTextoDesabilitado(
+                          _controllerinscEstadual, "Inscrição Estadual", false),
+                  _novocadastro
+                      ? _criarCampoCNPJ()
+                      : campos.campoTextoDesabilitado(
+                          _controllerCnpj, "CNPJ", false),
+                  _criarCampo(_controllerCep, TextInputType.number, 8, "CEP"),
+                  campos.campoTextoDesabilitado(
+                      _controllerEstado, "Estado", false),
+                  _criarDropDownCidade(),
+                  _criarCampo(
+                      _controllerBairro, TextInputType.text, 100, "Bairro"),
+                  _criarCampo(_controllerlogradouro, TextInputType.text, 100,
+                      "Logradouro"),
+                  _criarCampo(
+                      _controllerNumero, TextInputType.number, 10, "Número"),
+                  _criarCampo(_controllerTelefone, TextInputType.number, 11,
+                      "Telefone"),
+                  _criarCampo(_controllerEmail, TextInputType.emailAddress, 30,
+                      "E-mail"),
+                  _criarCampoCheckBox(),
+                  _criarCampoCheckBoxFornecedor(),
+                ],
+              ))),
+    );
   }
 
-//A propriedade validator dentro de cada campo faz algumas verificações e se o conteúdo não estiver como esperado
+  //A propriedade validator dentro de cada campo faz algumas verificações e se o conteúdo não estiver como esperado
 //Irá retornar uma mensagem em vermelho logo abaixo do campo
-  Widget _criarCampoEmail() {
-    return Container(
-        padding: EdgeInsets.all(6.0),
-        child: TextFormField(
-          controller: _controllerEmail,
-          keyboardType: TextInputType.emailAddress,
-          maxLength: 50,
-          decoration: InputDecoration(
-            hintText: "E-mail",
-          ),
-          style: TextStyle(color: Colors.black, fontSize: 17.0),
-          validator: (text) {
-            if (text.isEmpty) return "É necessário informar este campo!";
-            if (text.isNotEmpty && !text.contains("@") ||
-                !text.contains(".com")) return "E-mail inválido!";
-          },
-          onChanged: (texto) {
-            empresa.email = texto.toLowerCase();
-          },
-        ));
-  }
-
-  Widget _criarCampoNumero() {
-    return Container(
-        padding: EdgeInsets.all(6.0),
-        child: TextFormField(
-          controller: _controllerNumero,
-          keyboardType: TextInputType.number,
-          maxLength: 10,
-          decoration: InputDecoration(
-            hintText: "Número",
-          ),
-          style: TextStyle(color: Colors.black, fontSize: 17.0),
-          validator: (text) {
-            if (text.isEmpty) return "É necessário informar este campo!";
-          },
-          onChanged: (texto) {
-            empresa.numero = int.parse(texto.toUpperCase());
-          },
-        ));
-  }
-
-  Widget _criarCampoTelefone() {
-    return Container(
-        padding: EdgeInsets.all(6.0),
-        child: TextFormField(
-          controller: _controllerTelefone,
-          keyboardType: TextInputType.number,
-          maxLength: 11,
-          decoration: InputDecoration(
-            hintText: "Telefone",
-          ),
-          style: TextStyle(color: Colors.black, fontSize: 17.0),
-          validator: (text) {
-            if (text.isEmpty) return "É necessário informar este campo!";
-          },
-          onChanged: (texto) {
-            empresa.telefone = texto.toUpperCase();
-          },
-        ));
-  }
-
-  Widget _criarCampoBairro() {
-    return Container(
-        padding: EdgeInsets.all(6.0),
-        child: TextFormField(
-          controller: _controllerBairro,
-          keyboardType: TextInputType.text,
-          maxLength: 100,
-          decoration: InputDecoration(
-            hintText: "Bairro",
-          ),
-          style: TextStyle(color: Colors.black, fontSize: 17.0),
-          validator: (text) {
-            if (text.isEmpty) return "É necessário informar este campo!";
-          },
-          onChanged: (texto) {
-            empresa.bairro = texto.toUpperCase();
-          },
-        ));
-  }
 
   Widget _criarCampo(TextEditingController _controller, TextInputType tipo,
       int tamanho, String nome) {
     return Container(
-        padding: EdgeInsets.all(6.0),
+        padding: EdgeInsets.fromLTRB(5.0, 5.0, 0, 0),
         child: TextFormField(
           controller: _controller,
           keyboardType: tipo,
           maxLength: tamanho,
           decoration: InputDecoration(
-            hintText: nome,
-          ),
-          style: TextStyle(color: Colors.black, fontSize: 17.0),
-          validator: (text) {
-            if (text.isEmpty) return "É necessário informar este campo!";
-            if (nome == "CEP" && text.length < 8)
-              return "Valor inválido, verifique!";
+              hintText: nome,
+              labelText: nome,
+              labelStyle: TextStyle(
+                  color: cores.corLabel(), fontWeight: FontWeight.w400)),
+          style: TextStyle(color: cores.corCampo(true), fontSize: 17.0),
+          validator: (_controller) {
+            if (_controller.isNotEmpty) {
+              if (nome == "E-mail" && !_controller.contains("@")) {
+                return "E-mail inválido!";
+              }
+              if (nome == "E-mail" && !_controller.contains(".com")) {
+                return "E-mail inválido!";
+              }
+              if (nome == "CEP" && _controller.length < 8) {
+                return "Valor inválido, verifique!";
+              }
+            } else {
+              return "É necessário informar este campo!";
+            }
+            return null;
           },
           onChanged: (texto) {
             switch (nome) {
               case "Logradouro":
                 {
-                  empresa.logradouro = texto.toUpperCase();
+                  empresa.setLogradouro = texto.toUpperCase();
                 }
                 break;
 
-              case "Razão Social":
+              case "Telefone":
                 {
-                  empresa.razaoSocial = texto.toUpperCase();
+                  empresa.setTelefone = texto.toUpperCase();
+                }
+                break;
+
+              case "Bairro":
+                {
+                  empresa.setBairro = texto.toUpperCase();
+                }
+                break;
+
+              case "Número":
+                {
+                  empresa.setNumero = int.parse(texto.toUpperCase());
                 }
                 break;
 
               case "Nome Fantasia":
                 {
-                  empresa.nomeFantasia = texto.toUpperCase();
+                  empresa.setNomeFantasia = texto.toUpperCase();
+                }
+                break;
+
+              case "E-mail":
+                {
+                  empresa.setEmail = texto.toLowerCase();
                 }
                 break;
 
               case "CEP":
                 {
-                  empresa.cep = texto.toUpperCase();
+                  empresa.setCep = texto.toUpperCase();
                 }
                 break;
             }
@@ -289,52 +270,96 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
 
   Widget _criarCampoCNPJ() {
     return Container(
-        padding: EdgeInsets.all(6.0),
+        padding: EdgeInsets.fromLTRB(5.0, 5.0, 0, 0),
         child: TextFormField(
-          controller: _controllerCnpj,
-          keyboardType: TextInputType.number,
-          maxLength: 14,
-          //Se não for um novo cadastro o campo fica desabilitado
-          enabled: _novocadastro,
-          decoration: InputDecoration(
-            hintText: "CNPJ",
-          ),
-          style: _style(),
-          validator: (text) {
-            if (text.isEmpty || text.length < 14)
-              return "É necessário informar corretamente este campo!";
-            if (_existeCadastroCNPJ)
-              return "Já existe empresa com esse CNPJ, verifique!";
-            if (text.isNotEmpty && _cnpjValido == false)
-              return "CNPJ inválido!";
-          },
-          onChanged: (texto) {
-            empresa.cnpj = texto.toUpperCase();
-          },
-        ));
+            controller: _controllerCnpj,
+            keyboardType: TextInputType.text,
+            maxLength: 14,
+            decoration: InputDecoration(
+                hintText: "CNPJ",
+                labelText: "CNPJ",
+                labelStyle: TextStyle(
+                    color: cores.corLabel(), fontWeight: FontWeight.w400)),
+            style: TextStyle(color: cores.corCampo(true), fontSize: 17.0),
+            validator: (_controllerCnpj) {
+              if (_controllerCnpj.isNotEmpty) {
+                if (_controllerCnpj.isNotEmpty && _cnpjValido == false) {
+                  return "CNPJ inválido!";
+                }
+
+                if (_controllerCnpj.isNotEmpty && _controllerCnpj.length < 14) {
+                  return "Número de dígitos incorretos!";
+                }
+                if (_existeCadastroCNPJ) {
+                  return "Já existe empresa com esse CNPJ, verifique!";
+                }
+              } else {
+                return "É necessário informar este campo!";
+              }
+              return null;
+            },
+            onChanged: (texto) {
+              empresa.setCnpj = texto.toUpperCase();
+            }));
+  }
+
+  Widget _criarCampoRazaoSocial() {
+    return Container(
+        padding: EdgeInsets.fromLTRB(5.0, 5.0, 0, 0),
+        child: TextFormField(
+            controller: _controllerRazaoSocial,
+            keyboardType: TextInputType.text,
+            maxLength: 200,
+            decoration: InputDecoration(
+                hintText: "Razão Social",
+                labelText: "Razão Social",
+                labelStyle: TextStyle(
+                    color: cores.corLabel(), fontWeight: FontWeight.w400)),
+            style: TextStyle(color: cores.corCampo(true), fontSize: 17.0),
+            validator: (_controllerRazaoSocial) {
+              if (_controllerRazaoSocial.isNotEmpty) {
+                if (_existeCadastroRazaoSocial) {
+                  return "Razão Social já existe, verifique!";
+                }
+              } else {
+                return "É necessário informar este campo!";
+              }
+              return null;
+            },
+            onChanged: (texto) {
+              empresa.setRazaoSocial = texto.toUpperCase();
+            }));
   }
 
   Widget _criarCampoIE() {
     return Container(
-        padding: EdgeInsets.all(6.0),
+        padding: EdgeInsets.fromLTRB(5.0, 5.0, 0, 0),
         child: TextFormField(
-          controller: _controllerinscEstadual,
-          keyboardType: TextInputType.number,
-          maxLength: 9,
-          decoration: InputDecoration(
-            hintText: "Inscrição Estadual",
-          ),
-          style: TextStyle(color: Colors.black, fontSize: 17.0),
-          validator: (text) {
-            if (text.isEmpty || text.length < 9)
-              return "É necessário informar corretamente este campo!";
-            if (_existeCadastroIE)
-              return "Já existe empresa com essa IE, verifique!";
-          },
-          onChanged: (texto) {
-            empresa.inscEstadual = texto.toUpperCase();
-          },
-        ));
+            controller: _controllerinscEstadual,
+            keyboardType: TextInputType.text,
+            maxLength: 9,
+            decoration: InputDecoration(
+                hintText: "Inscrição Estadual",
+                labelText: "Inscrição Estadual",
+                labelStyle: TextStyle(
+                    color: cores.corLabel(), fontWeight: FontWeight.w400)),
+            style: TextStyle(color: cores.corCampo(true), fontSize: 17.0),
+            validator: (_controllerinscEstadual) {
+              if (_controllerinscEstadual.isNotEmpty) {
+                if (_controllerinscEstadual.length < 9) {
+                  return "Número de dígitos incorretos!";
+                }
+                if (_existeCadastroIE) {
+                  return "Já existe empresa com essa IE, verifique!";
+                }
+              } else {
+                return "É necessário informar este campo!";
+              }
+              return null;
+            },
+            onChanged: (texto) {
+              empresa.setInscEstadual = texto.toUpperCase();
+            }));
   }
 
   Widget _criarCampoCheckBox() {
@@ -343,13 +368,13 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
       child: Row(
         children: <Widget>[
           Checkbox(
-            value: empresa.ativo == true,
+            value: empresa.getAtivo == true,
             onChanged: (bool novoValor) {
               setState(() {
                 if (novoValor) {
-                  empresa.ativo = true;
+                  empresa.setAtivo = true;
                 } else {
-                  empresa.ativo = false;
+                  empresa.setAtivo = false;
                 }
               });
             },
@@ -369,13 +394,13 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
       child: Row(
         children: <Widget>[
           Checkbox(
-            value: empresa.ehFornecedor == true,
+            value: empresa.getEhFornecedor == true,
             onChanged: (bool novoValor) {
               setState(() {
                 if (novoValor) {
-                  empresa.ehFornecedor = true;
+                  empresa.setEhFornecedor = true;
                 } else {
-                  empresa.ehFornecedor = false;
+                  empresa.setEhFornecedor = false;
                 }
               });
             },
@@ -391,7 +416,7 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
 
   Widget _criarDropDownCidade() {
     return StreamBuilder<QuerySnapshot>(
-        stream: Firestore.instance
+        stream: FirebaseFirestore.instance
             .collection('cidades')
             .where('ativa', isEqualTo: true)
             .snapshots(),
@@ -401,10 +426,10 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
               child: CircularProgressIndicator(),
             );
           } else {
-            var length = snapshot.data.documents.length;
-            DocumentSnapshot ds = snapshot.data.documents[length - 1];
+            var length = snapshot.data.docs.length;
+            DocumentSnapshot ds = snapshot.data.docs[length - 1];
             return Container(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.fromLTRB(5.0, 5.0, 0, 0),
               child: Row(
                 children: <Widget>[
                   Container(
@@ -412,23 +437,25 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
                     child: DropdownButton(
                       value: _dropdownValue,
                       hint: Text("Selecionar cidade"),
-                      onChanged: (String newValue) {
+                      onChanged: (String newValue) async {
+                        await _controllerCidade.obterCidade(newValue);
                         setState(() {
                           _dropdownValue = newValue;
+                          empresa.setCidade = _controllerCidade.getCidade;
+                          _controllerEstado.text = empresa.getCidade.getEstado;
                         });
                       },
-                      items: snapshot.data.documents
-                          .map((DocumentSnapshot document) {
+                      items:
+                          snapshot.data.docs.map((DocumentSnapshot document) {
                         return DropdownMenuItem<String>(
-                            value: document.data()['nome'] +
-                                ' - ' +
-                                document.data()['estado'],
+                            value:
+                                document.id + ' - ' + document.data()['nome'],
                             child: Container(
                               child: Text(
-                                  document.data()['nome'] +
-                                      ' - ' +
-                                      document.data()['estado'],
-                                  style: TextStyle(color: Colors.black)),
+                                  document.id + ' - ' + document.data()['nome'],
+                                  style: TextStyle(
+                                      color: cores.corCampo(true),
+                                      fontSize: 17.0)),
                             ));
                       }).toList(),
                     ),
@@ -440,12 +467,16 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
         });
   }
 
-  //Define a cor da fonte de campos que serão desabilitados ao se tratar de uma edição
-  TextStyle _style() {
-    if (_novocadastro) {
-      return TextStyle(color: Colors.black, fontSize: 17.0);
-    } else {
-      return TextStyle(color: Colors.grey, fontSize: 17.0);
-    }
+  void whenCompleteCNPJ() {
+    _existeCadastroCNPJ = _controllerEmpresa.getExisteCadastroCNPJ;
+  }
+
+  void whenCompleteIE() {
+    _existeCadastroIE = _controllerEmpresa.getExisteCadastroIE;
+  }
+
+  void whenCompleteRazaoSocial() {
+    _existeCadastroRazaoSocial =
+        _controllerEmpresa.getExisteCadastroRazaoSocial;
   }
 }
