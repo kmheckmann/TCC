@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tcc_3/acessorios/Cores.dart';
+import 'package:tcc_3/controller/CategoriaController.dart';
 import 'package:tcc_3/controller/ItemPedidoCompraController.dart';
 import 'package:tcc_3/controller/PedidoCompraController.dart';
+import 'package:tcc_3/controller/ProdutoController.dart';
 import 'package:tcc_3/model/ItemPedido.dart';
 import 'package:tcc_3/model/ItemPedidoCompra.dart';
 import 'package:tcc_3/model/PedidoCompra.dart';
@@ -26,7 +28,9 @@ class _TelaItensPedidoCompraState extends State<TelaItensPedidoCompra> {
   PedidoCompra pedidoCompra;
   ItemPedido itemRemovido;
   ItemPedidoCompraController _controller = ItemPedidoCompraController();
+  ProdutoController _controllerproduto = ProdutoController();
   PedidoCompraController _controllerPedido = PedidoCompraController();
+  CategoriaController _controllerCategoria = CategoriaController();
   Cores cor = Cores();
 
   _TelaItensPedidoCompraState(
@@ -76,10 +80,12 @@ class _TelaItensPedidoCompraState extends State<TelaItensPedidoCompra> {
                   itemCount: snapshot.data.docs.length,
                   //Ira pegar cada item no firebase e retornar
                   itemBuilder: (context, index) {
-                    _controller.obterProduto(pedidoCompra.getID);
                     ItemPedido itemPedido = ItemPedidoCompra.buscarFirebase(
                         snapshot.data.docs[index]);
-                    itemPedido.produto = _controller.getProduto;
+                    _controllerproduto
+                        .obterProdutoPorID(id: itemPedido.id)
+                        .whenComplete(() =>
+                            itemPedido.produto = _controllerproduto.produto);
                     return _construirListaPedidos(context, itemPedido,
                         snapshot.data.docs[index], pedidoCompra);
                   });
@@ -124,7 +130,6 @@ class _TelaItensPedidoCompraState extends State<TelaItensPedidoCompra> {
   Widget _codigoLista(
       contexto, ItemPedido p, DocumentSnapshot snapshot, PedidoCompra pedido) {
     return InkWell(
-      //InkWell eh pra dar uma animacao quando clicar no produto
       child: Card(
         child: Row(
           children: <Widget>[
@@ -164,8 +169,14 @@ class _TelaItensPedidoCompraState extends State<TelaItensPedidoCompra> {
         ),
       ),
       onTap: () async {
-        await _controller.obterProduto(pedidoCompra.getID);
-        p.produto = _controller.getProduto;
+        await _controllerproduto
+            .obterProdutoPorID(id: snapshot.data()["id"])
+            .whenComplete(() => p.produto = _controllerproduto.produto);
+        await _controllerproduto.obterCategoria(p.produto.getID);
+        await _controllerCategoria
+            .obterCategoria(_controllerproduto.getIdCategoriaProduto)
+            .whenComplete(() =>
+                p.produto.setCategoria = _controllerCategoria.getCategoria);
         Navigator.push(
           context,
           MaterialPageRoute(

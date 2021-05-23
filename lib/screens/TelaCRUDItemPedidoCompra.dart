@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:tcc_3/acessorios/Auxiliares.dart';
 import 'package:tcc_3/acessorios/Campos.dart';
 import 'package:tcc_3/acessorios/Cores.dart';
+import 'package:tcc_3/controller/CategoriaController.dart';
 import 'package:tcc_3/controller/ItemPedidoCompraController.dart';
 import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/controller/PedidoCompraController.dart';
@@ -40,6 +41,7 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
   final _controllerPreco = TextEditingController();
   final _controllerQtde = TextEditingController();
   final _controllerProd = TextEditingController();
+  final _controllerProdCat = TextEditingController();
   final _validadorCampos = GlobalKey<FormState>();
   final _scaffold = GlobalKey<ScaffoldState>();
   //mascara usada para impedir que sejam usados espaços, virgulas ou hifens no campo preço
@@ -59,6 +61,7 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
       ItemPedidoCompraController();
   PedidoCompraController _controllerPedido = PedidoCompraController();
   ObterProxIDController proxIDController = ObterProxIDController();
+  CategoriaController _catController = CategoriaController();
   Auxiliares aux = Auxiliares();
   Cores cor = Cores();
   Campos campos = Campos();
@@ -73,6 +76,7 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
           itemPedido.produto.getID + ' - ' + itemPedido.produto.getDescricao;
       _controllerPreco.text = itemPedido.preco.toString();
       _controllerQtde.text = itemPedido.quantidade.toString();
+      _controllerProdCat.text = itemPedido.produto.getCategoria.getDescricao;
       _novocadastro = false;
     } else {
       _nomeTela = "Novo Produto";
@@ -95,12 +99,6 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
               child: Icon(Icons.save),
               backgroundColor: Colors.blue,
               onPressed: () async {
-                if (_dropdownValueProduto != null) {
-                  await _controllerProduto.obterProdutoPorID(
-                      terminou: whenCompleteObterProduto,
-                      id: _dropdownValueProduto);
-                }
-
                 if (_validadorCampos.currentState.validate()) {
                   if (_dropdownValueProduto != null) {
                     if (_novocadastro) {
@@ -151,6 +149,8 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
             padding: EdgeInsets.all(8.0),
             children: <Widget>[
               _campoProduto(),
+              campos.campoTextoDesabilitado(
+                  _controllerProdCat, "Categoria do produto", false),
               !pedidoCompra.getPedidoFinalizado
                   ? _criarCampoTexto(_controllerPreco, "Preço",
                       TextInputType.number, maskPreco)
@@ -181,7 +181,7 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
             var length = snapshot.data.docs.length;
             DocumentSnapshot ds = snapshot.data.docs[length - 1];
             return Container(
-              padding: EdgeInsets.fromLTRB(0.0, 8.0, 8.0, 0.0),
+              padding: EdgeInsets.fromLTRB(5.0, 5.0, 0, 0),
               child: Row(
                 children: <Widget>[
                   Container(
@@ -189,9 +189,19 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
                     child: DropdownButton(
                       value: _dropdownValueProduto,
                       hint: Text("Selecionar produto"),
-                      onChanged: (String newValue) {
+                      onChanged: (String newValue) async {
+                        await _controllerProduto.obterProdutoPorID(
+                            terminou: whenCompleteObterProduto, id: newValue);
+                        await _controllerProduto.obterCategoria(produto.getID);
+                        await _catController
+                            .obterCategoria(
+                                _controllerProduto.getIdCategoriaProduto)
+                            .whenComplete(() => produto.setCategoria =
+                                _catController.getCategoria);
                         setState(() {
                           _dropdownValueProduto = newValue;
+                          _controllerProdCat.text =
+                              produto.getCategoria.getDescricao;
                         });
                       },
                       items:
@@ -221,23 +231,31 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
 
   Widget _criarCampoTexto(TextEditingController _controller, String titulo,
       TextInputType tipo, FilteringTextInputFormatter mask) {
-    return TextFormField(
-      controller: _controller,
-      inputFormatters: [mask],
-      enabled: pedidoCompra.getPedidoFinalizado ? false : true,
-      keyboardType: tipo,
-      decoration: InputDecoration(hintText: titulo),
-      style: TextStyle(color: cor.corCampo(true), fontSize: 17.0),
-      validator: (text) {
-        if (_controller.text.isEmpty)
-          return "É necessário preencher este campo!";
-      },
-      onChanged: (texto) {
-        if (texto.isNotEmpty) {
-          if (titulo == "Preço") itemPedido.preco = double.parse(texto);
-          if (titulo == "Quantidade") itemPedido.quantidade = int.parse(texto);
-        }
-      },
+    return Container(
+      padding: EdgeInsets.fromLTRB(5.0, 5.0, 0, 0),
+      child: TextFormField(
+        controller: _controller,
+        inputFormatters: [mask],
+        enabled: pedidoCompra.getPedidoFinalizado ? false : true,
+        keyboardType: tipo,
+        decoration: InputDecoration(
+            hintText: titulo,
+            labelText: titulo,
+            labelStyle:
+                TextStyle(color: cor.corLabel(), fontWeight: FontWeight.w400)),
+        style: TextStyle(color: cor.corCampo(true), fontSize: 17.0),
+        validator: (text) {
+          if (_controller.text.isEmpty)
+            return "É necessário preencher este campo!";
+        },
+        onChanged: (texto) {
+          if (texto.isNotEmpty) {
+            if (titulo == "Preço") itemPedido.preco = double.parse(texto);
+            if (titulo == "Quantidade")
+              itemPedido.quantidade = int.parse(texto);
+          }
+        },
+      ),
     );
   }
 
