@@ -9,7 +9,6 @@ class EmpresaController {
   bool _existeCadastroCNPJ = true;
   bool _existeCadastroIE = true;
   bool _existeCadastroRazaoSocial = true;
-  Empresa _emp;
   String _idCidadeEmpresa;
 
   String get getCidadeEmpresa {
@@ -26,14 +25,6 @@ class EmpresaController {
 
   set setEmpresa(Empresa empresa) {
     _empresa = empresa;
-  }
-
-  Empresa get getEmp {
-    return _emp;
-  }
-
-  set setEmp(Empresa emp) {
-    _emp = emp;
   }
 
   bool get getExisteCadastroIE {
@@ -159,10 +150,25 @@ class EmpresaController {
         await ref.where("razaoSocial", isEqualTo: nomeEmpresa).get();
 
     eventsQuery.docs.forEach((document) {
-      _emp = Empresa.buscarFirebase(document);
-      _emp.setId = document.id;
+      _empresa = Empresa.buscarFirebase(document);
+      _empresa.setId = document.id;
     });
-    return Future.value(_emp);
+    return Future.value(_empresa);
+  }
+
+  Future obterEmpresa({String id, VoidCallback terminou}) async {
+    if (id.contains(" - ")) {
+      var array = id.split(" - ");
+      id = array[0];
+    }
+    DocumentSnapshot doc =
+        await FirebaseFirestore.instance.collection("empresas").doc(id).get();
+    _empresa = Empresa.buscarFirebase(doc);
+    _empresa.setId = doc.id;
+
+    if (terminou != null) {
+      terminou();
+    }
   }
 
   bool validarCNPJ(String cnpj) {

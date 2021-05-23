@@ -5,10 +5,10 @@ class ObterProxIDController {
 
   ObterProxIDController();
 
-  Future<Null> obterProxID(String collection) async {
+  Future<Null> obterProxID(CollectionReference collection) async {
     int idTemp = 0;
     int docID;
-    CollectionReference ref = FirebaseFirestore.instance.collection(collection);
+    CollectionReference ref = collection;
     QuerySnapshot eventsQuery = await ref.get();
 
     eventsQuery.docs.forEach((document) {

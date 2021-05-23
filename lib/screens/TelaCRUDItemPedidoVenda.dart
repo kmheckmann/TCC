@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tcc_3/controller/EstoqueProdutoController.dart';
 import 'package:tcc_3/controller/ItemPedidoVendaController.dart';
+import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/controller/PedidoVendaController.dart';
 import 'package:tcc_3/controller/ProdutoController.dart';
 import 'package:tcc_3/model/ItemPedido.dart';
@@ -48,6 +49,8 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
   ItemPedidoVendaController _controllerItemPedido = ItemPedidoVendaController();
   PedidoVendaController _controllerPedido = PedidoVendaController();
   EstoqueProdutoController _controllerEstoque = EstoqueProdutoController();
+  ObterProxIDController proxIDController = ObterProxIDController();
+
   @override
   void initState() {
     super.initState();
@@ -76,7 +79,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
         centerTitle: true,
       ),
       floatingActionButton: Visibility(
-          visible: pedidoVenda.pedidoFinalizado ? false : true,
+          visible: pedidoVenda.getPedidoFinalizado ? false : true,
           child: FloatingActionButton(
               child: Icon(Icons.save),
               backgroundColor: Colors.blue,
@@ -99,7 +102,8 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
             padding: EdgeInsets.all(8.0),
             children: <Widget>[
               _campoProduto(),
-              _criarCampoTexto(_controllerPreco, "Preço", TextInputType.numberWithOptions(decimal: true)),
+              _criarCampoTexto(_controllerPreco, "Preço",
+                  TextInputType.numberWithOptions(decimal: true)),
               _criarCampoTexto(
                   _controllerQtde, "Quantidade", TextInputType.number),
               _criarCampoQtdeExistente(),
@@ -137,7 +141,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
                       onChanged: (String newValue) async {
                         //Ao selecionar o valor no dropdown busca o item correspondente
                         await _controllerProduto
-                            .obterProdutoPorDescricao(newValue);
+                            .obterProdutoPorID(id: newValue);
                         produto = _controllerProduto.produto;
                         //Faz o calculo do preco de venda e seta o valor no campo
                         await _controllerEstoque.obterPrecoVenda(produto);
@@ -173,7 +177,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
   }
 
   TextStyle _style() {
-    if (pedidoVenda.pedidoFinalizado) {
+    if (pedidoVenda.getPedidoFinalizado) {
       return TextStyle(color: Colors.grey, fontSize: 17.0);
     } else {
       return TextStyle(color: Colors.black, fontSize: 17.0);
@@ -184,8 +188,10 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
       TextEditingController _controller, String titulo, TextInputType tipo) {
     return TextFormField(
       controller: _controller,
-      inputFormatters: [FilteringTextInputFormatter.allow((RegExp(r'^(\d+)?\.?\d{0,2}')))],
-      enabled: pedidoVenda.pedidoFinalizado ? false : true,
+      inputFormatters: [
+        FilteringTextInputFormatter.allow((RegExp(r'^(\d+)?\.?\d{0,2}')))
+      ],
+      enabled: pedidoVenda.getPedidoFinalizado ? false : true,
       keyboardType: tipo,
       decoration: InputDecoration(
           hintText: titulo,
@@ -222,7 +228,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
     _controllerProd.text = _dropdownValueProduto;
     //se o pedido estiver finalizado sera criado um TextField com o valor
     //se não estiver, sera criado o dropDown
-    if (pedidoVenda.pedidoFinalizado) {
+    if (pedidoVenda.getPedidoFinalizado) {
       return _criarCampoTexto(_controllerProd, "Produto", TextInputType.text);
     } else {
       return _criarDropDownProduto();
@@ -232,22 +238,31 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
   void _codigoPersistir() async {
     itemPedido.preco = double.parse(_controllerPreco.text);
     if (_novocadastro) {
-      await _controllerItemPedido.obterProxID(pedidoVenda.id);
-      itemPedido.id = _controllerItemPedido.proxID;
+      await proxIDController.obterProxID(FirebaseFirestore.instance
+          .collection("pedidos")
+          .doc(pedidoVenda.getID)
+          .collection("itens"));
+      itemPedido.id = proxIDController.proxID;
       _controllerPedido.somarPrecoNoVlTotal(pedidoVenda, itemPedido);
-      pedidoVenda.valorTotal = _controllerPedido.pedidoVenda.valorTotal;
-      pedidoVenda.valorComDesconto =
-          _controllerPedido.pedidoVenda.valorComDesconto;
-      _controllerItemPedido.persistirItem(itemPedido, pedidoVenda.id,
-          produto.getID, _controllerPedido.converterParaMapaPedidoVenda(pedidoVenda));
+      pedidoVenda.setValorTotal = _controllerPedido.pedidoVenda.getValorTotal;
+      pedidoVenda.setValorDesconto =
+          _controllerPedido.pedidoVenda.getValorDesconto;
+      _controllerItemPedido.persistirItem(
+          itemPedido,
+          pedidoVenda.getID,
+          produto.getID,
+          _controllerPedido.converterParaMapaPedidoVenda(pedidoVenda));
     } else {
       _controllerPedido.atualizarPrecoNoVlTotal(
           vlItemAntigo, pedidoVenda, itemPedido);
-      pedidoVenda.valorTotal = _controllerPedido.pedidoVenda.valorTotal;
-      pedidoVenda.valorComDesconto =
-          _controllerPedido.pedidoVenda.valorComDesconto;
-      _controllerItemPedido.persistirItem(itemPedido, pedidoVenda.id,
-          produto.getID, _controllerPedido.converterParaMapaPedidoVenda(pedidoVenda));
+      pedidoVenda.setValorTotal = _controllerPedido.pedidoVenda.getValorTotal;
+      pedidoVenda.setValorDesconto =
+          _controllerPedido.pedidoVenda.getValorDesconto;
+      _controllerItemPedido.persistirItem(
+          itemPedido,
+          pedidoVenda.getID,
+          produto.getID,
+          _controllerPedido.converterParaMapaPedidoVenda(pedidoVenda));
     }
     Navigator.of(context).pop(MaterialPageRoute(
         builder: (contexto) => TelaItensPedidovenda(pedidoVenda: pedidoVenda)));

@@ -1,35 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tcc_3/controller/ProdutoController.dart';
 import 'package:tcc_3/model/ItemPedido.dart';
 import 'package:tcc_3/model/Produto.dart';
 
 abstract class ItemPedidoController {
-  String proxID;
-  Produto produto = Produto();
-  Map<String, dynamic> dadosPedido = Map();
+  Produto _produto = Produto();
+  Map<String, dynamic> _dadosPedido = Map();
+  ProdutoController _controllerProduto = ProdutoController();
 
-  Future<Null> obterProxID(String idPedido) async {
-    int idTemp = 0;
-    int docID;
-    CollectionReference ref = Firestore.instance
-        .collection("pedidos")
-        .document(idPedido)
-        .collection("itens");
-    QuerySnapshot eventsQuery = await ref.getDocuments();
+  Map<String, dynamic> get getDadosPedido {
+    return _dadosPedido;
+  }
 
-    eventsQuery.documents.forEach((document) {
-      docID = int.parse(document.documentID);
-      if (eventsQuery.documents.length == 0) {
-        idTemp = 1;
-        proxID = idTemp.toString();
-      } else {
-        if (docID > idTemp) {
-          idTemp = docID;
-        }
-      }
-    });
+  set setDadosPedido(Map<String, dynamic> dadosPedido) {
+    _dadosPedido = dadosPedido;
+  }
 
-    idTemp = idTemp + 1;
-    proxID = idTemp.toString();
+  Produto get getProduto {
+    return _produto;
+  }
+
+  set setProduto(Produto prod) {
+    _produto = prod;
   }
 
   void persistirItem(ItemPedido item, String idPedido, String idProduto,
@@ -38,30 +30,24 @@ abstract class ItemPedidoController {
   void removerItem(ItemPedido item, String idItem, String idPedido,
       Map<String, dynamic> dadosPedido);
 
-//Método utilizado para pegar as demais informações do produto selecionado na tela de cadastro do item do pedido
-  Future<Null> obterProduto(String idPedido) async {
+  //Método utilizado na classe a onde apresenta as listagens dos itens dos pedidos
+  //Para obter todos os itens do pedido e as informações do produto do item do pedido
+  Future obterProduto(String idPedido) async {
     Produto prod = Produto();
-    //Busca a categoria vinculada ao produto (dentro do produto está salvo somente o ID da categoria)
-    CollectionReference ref = Firestore.instance
+
+    //Carrega a coleção de itens de pedido
+    CollectionReference ref = FirebaseFirestore.instance
         .collection('pedidos')
-        .document(idPedido)
+        .doc(idPedido)
         .collection('itens');
-    QuerySnapshot obterProduto = await ref.getDocuments();
+    QuerySnapshot obterProduto = await ref.get();
 
-    //Busca todas as categorias cadastradas
-    CollectionReference refCliente = Firestore.instance.collection('produtos');
-    QuerySnapshot obterDadosProduto = await refCliente.getDocuments();
-
-    //Pega o ID do produto do pedido e compara com os IDs dos produtos cadastrados
-    //Se o ID do produto do pedido for igual ao ID de um dos produtos cadastradao, atribui as informações
-    obterProduto.documents.forEach((document) {
+    //Papa cada documento da coleção, pega o ID e busca as informações do produto pelo ID
+    obterProduto.docs.forEach((document) {
+      _controllerProduto.obterProdutoPorID(id: document.data()["id"]);
       prod.setID = document.data()["id"];
-      obterDadosProduto.documents.forEach((document1) {
-        if (prod.getID == document1.documentID) {
-          prod = Produto.buscarFirebase(document1);
-        }
-      });
+      prod = _controllerProduto.produto;
     });
-    this.produto = prod;
+    setProduto = prod;
   }
 }

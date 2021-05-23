@@ -42,7 +42,7 @@ class RelatorioValorItensVendidosController {
     p.forEach((pedido) async {
       CollectionReference ref = FirebaseFirestore.instance
           .collection('pedidos')
-          .doc(pedido.id)
+          .doc(pedido.getID)
           .collection('itens');
       QuerySnapshot obterItens = await ref.get();
 

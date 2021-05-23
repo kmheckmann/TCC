@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:tcc_3/controller/PedidoController.dart';
 import 'package:tcc_3/model/ItemPedido.dart';
 import 'package:tcc_3/model/Pedido.dart';
@@ -11,16 +12,16 @@ class PedidoVendaController extends PedidoController {
 
   Map<String, dynamic> converterParaMapaPedidoVenda(PedidoVenda p) {
     return {
-      "valorTotal": p.valorTotal,
-      "percentualDesconto": p.percentualDesconto,
-      "tipoPagamento": p.tipoPagamento,
-      "ehPedidoVenda": p.ehPedidoVenda,
-      "dataPedido": p.dataPedido,
+      "valorTotal": p.getValorTotal,
+      "percentualDesconto": p.getPercentDesconto,
+      "tipoPagamento": p.getTipoPgto,
+      "ehPedidoVenda": p.getEhPedidoVenda,
+      "dataPedido": p.getDataPedido,
       "tipoPedido": p.tipoPedido,
-      "pedidoFinalizado": p.pedidoFinalizado,
-      "label": p.labelTelaPedidos,
-      "valorComDesconto": p.valorComDesconto,
-      "dataFinalPedido": p.dataFinalPedido,
+      "pedidoFinalizado": p.getPedidoFinalizado,
+      "label": p.getLabel,
+      "valorComDesconto": p.getValorDesconto,
+      "dataFinalPedido": p.getDataFinal,
     };
   }
 
@@ -29,43 +30,43 @@ class PedidoVendaController extends PedidoController {
       Map<String, dynamic> dadosEmpresa,
       Map<String, dynamic> dadosUsuario,
       String idPedido) async {
-    this.dadosPedido = dadosPedido;
-    this.dadosEmpresa = dadosEmpresa;
-    this.dadosUsuario = dadosUsuario;
+    this.setDadosPedido = dadosPedido;
+    this.setDadosEmpresa = dadosEmpresa;
+    this.setDadosUser = dadosUsuario;
 
     //Grava os dados do pedido
-    await Firestore.instance
+    await FirebaseFirestore.instance
         .collection("pedidos")
-        .document(idPedido)
-        .setData(dadosPedido);
+        .doc(idPedido)
+        .set(dadosPedido);
 
     //Salva dentro da collection pedido o ID do cliente do pedido
-    await Firestore.instance
+    await FirebaseFirestore.instance
         .collection("pedidos")
-        .document(idPedido)
+        .doc(idPedido)
         .collection("cliente")
-        .document("IDcliente")
-        .setData(dadosEmpresa);
+        .doc("IDcliente")
+        .set(dadosEmpresa);
     //Salva dentro da collection pedido o ID do vendedor
-    await Firestore.instance
+    await FirebaseFirestore.instance
         .collection("pedidos")
-        .document(idPedido)
+        .doc(idPedido)
         .collection("vendedor")
-        .document("IDvendedor")
-        .setData(dadosUsuario);
+        .doc("IDvendedor")
+        .set(dadosUsuario);
   }
 
 //Aplica no valor total do pedido o desconto informado
   @override
   void calcularDesconto(Pedido p) {
-    if (p.valorTotal != 0 || p.valorTotal == 0) {
-      double vlDesc = (p.percentualDesconto / 100) * p.valorTotal;
-      pedidoVenda.valorComDesconto = (p.valorTotal - vlDesc);
-      pedidoVenda.valorComDesconto =
-          num.parse(pedidoVenda.valorComDesconto.toStringAsFixed(2));
+    if (p.getValorTotal != 0 || p.getValorTotal == 0) {
+      double vlDesc = (p.getPercentDesconto / 100) * p.getValorTotal;
+      pedidoVenda.setValorDesconto = (p.getValorTotal - vlDesc);
+      pedidoVenda.setValorDesconto =
+          num.parse(pedidoVenda.getValorDesconto.toStringAsFixed(2));
     } else {
       //Exceção para o caso de o desconto ser informado antes do pedido ter algum valor
-      pedidoVenda.valorComDesconto = 0;
+      pedidoVenda.setValorDesconto = 0;
     }
   }
 
@@ -74,10 +75,10 @@ class PedidoVendaController extends PedidoController {
   void somarPrecoNoVlTotal(Pedido p, ItemPedido novoItem) {
     double valorTotalItem = novoItem.preco * novoItem.quantidade;
     valorTotalItem = num.parse(valorTotalItem.toStringAsFixed(2));
-    p.valorTotal += valorTotalItem;
-    pedidoVenda.valorTotal = p.valorTotal;
-    pedidoVenda.valorTotal =
-        num.parse(pedidoVenda.valorTotal.toStringAsFixed(2));
+    p.setValorTotal = p.getValorTotal + valorTotalItem;
+    pedidoVenda.setValorTotal = p.getValorTotal;
+    pedidoVenda.setValorTotal =
+        num.parse(pedidoVenda.getValorTotal.toStringAsFixed(2));
     calcularDesconto(p);
   }
 
@@ -85,7 +86,7 @@ class PedidoVendaController extends PedidoController {
   void atualizarPrecoNoVlTotal(double precoAntigo, Pedido p, ItemPedido item) {
     //Diminui o valor total antigo obtido com a soma das quantidade do item
     double vlTotalItemAntigo = precoAntigo * item.quantidade;
-    p.valorTotal -= vlTotalItemAntigo;
+    p.setValorTotal = p.getValorTotal - vlTotalItemAntigo;
     //Após diminuir, chama o método abaixo para somar o novo valor no pedido
     somarPrecoNoVlTotal(p, item);
   }
@@ -93,38 +94,19 @@ class PedidoVendaController extends PedidoController {
 //Método utilizado quando um item é removido, para diminuir seu valor do valor total do pedido
   void subtrairPrecoVlTotal(Pedido p, ItemPedido itemExcluido) {
     double valorTotalItem = itemExcluido.preco * itemExcluido.quantidade;
-    p.valorTotal -= valorTotalItem;
-    pedidoVenda.valorTotal = p.valorTotal;
+    p.setValorTotal = p.getValorTotal - valorTotalItem;
+    pedidoVenda.setValorTotal = p.getValorTotal;
     calcularDesconto(p);
-  }
-
-  Future<Null> verificarSePedidoTemItens(Pedido p) async {
-    //este método tem o objetivo de verificar se o pedido possui itens cadastrados
-    //para poder finalizar o pedido
-
-    //Acessa a coleção onde os iens ficam salvos
-    CollectionReference ref = Firestore.instance
-        .collection("pedidos")
-        .document(p.id)
-        .collection("itens");
-    //Obtém todos os documentos da coleção
-    QuerySnapshot _obterItens = await ref.getDocuments();
-
-    if (_obterItens.documents.length > 0) {
-      podeFinalizar = true;
-    } else {
-      podeFinalizar = false;
-    }
   }
 
 //Método chamado ao utilizar o botão de atualizar na capa do pedido
   @override
-  Future<Null> atualizarCapaPedido(String idPedido) async {
-    CollectionReference ref = Firestore.instance.collection('pedidos');
-    QuerySnapshot _obterPedido = await ref.getDocuments();
+  Future atualizarCapaPedido(String idPedido, VoidCallback terminou) async {
+    CollectionReference ref = FirebaseFirestore.instance.collection('pedidos');
+    QuerySnapshot _obterPedido = await ref.get();
 
-    _obterPedido.documents.forEach((document) {
-      if (idPedido == document.documentID) {
+    _obterPedido.docs.forEach((document) {
+      if (idPedido == document.id) {
         pedidoVenda = PedidoVenda.buscarFirebase(document);
       }
     });

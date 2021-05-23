@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tcc_3/acessorios/Campos.dart';
 import 'package:tcc_3/acessorios/Cores.dart';
-import 'package:tcc_3/acessorios/Mensagens.dart';
+import 'package:tcc_3/acessorios/Auxiliares.dart';
 import 'package:tcc_3/controller/CategoriaController.dart';
 import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/controller/ProdutoController.dart';
@@ -36,7 +36,7 @@ class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
   ProdutoController controllerProduto = ProdutoController();
   CategoriaController controllerCategoria = CategoriaController();
   ObterProxIDController obterProxID = ObterProxIDController();
-  Mensagens msg = Mensagens();
+  Auxiliares aux = Auxiliares();
   Campos campos = Campos();
   Cores cores = Cores();
 
@@ -122,7 +122,7 @@ class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
         Map<String, dynamic> mapaCategoria = Map();
         mapaCategoria["id"] = categoria.getID;
         if (_novocadastro) {
-          await obterProxID.obterProxID("produtos");
+          await obterProxID.obterProxID(FirebaseFirestore.instance.collection("produtos"));
           produto.setID = obterProxID.proxID;
           controllerProduto.persistirProduto(
               mapa, mapaCategoria, produto.getID);
@@ -132,7 +132,7 @@ class _TelaCRUDProdutoState extends State<TelaCRUDProduto> {
         }
         Navigator.of(context).pop();
       } else {
-        msg.exibirBarraMensagem(
+        aux.exibirBarraMensagem(
             "É necessário selecionar uma Categoria!", Colors.red, _scaffold);
       }
     }

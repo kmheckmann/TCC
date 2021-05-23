@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tcc_3/acessorios/Campos.dart';
 import 'package:tcc_3/acessorios/Cores.dart';
-import 'package:tcc_3/acessorios/Mensagens.dart';
+import 'package:tcc_3/acessorios/Auxiliares.dart';
 import 'package:tcc_3/controller/CidadeController.dart';
 import 'package:tcc_3/controller/EmpresaController.dart';
 import 'package:tcc_3/model/Cidade.dart';
@@ -44,7 +44,7 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
 
   Cores cores = Cores();
   Campos campos = Campos();
-  Mensagens msg = Mensagens();
+  Auxiliares aux = Auxiliares();
   Cidade cidade = Cidade();
   EmpresaController _controllerEmpresa = EmpresaController();
   CidadeController _controllerCidade = CidadeController();
@@ -139,7 +139,7 @@ class _TelaCRUDEmpresaState extends State<TelaCRUDEmpresa> {
               } else {
                 //Se a cidade não for selecionada apresenta uma mensagem e não salva as alterações
                 if (_dropdownValue == null) {
-                  msg.exibirBarraMensagem("É necessário selecionar uma cidade!",
+                  aux.exibirBarraMensagem("É necessário selecionar uma cidade!",
                       Colors.red, _scaffold);
                 }
               }

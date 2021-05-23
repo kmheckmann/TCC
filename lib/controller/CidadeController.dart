@@ -58,30 +58,6 @@ class CidadeController {
     _cidade.setNome = doc.data()["nome"];
   }
 
-  Future<Null> obterCidadePorNomeEstado(String nomeEestado) async {
-    //Utilizado pelo cadastro de empresas,
-    //para saber qual os dados da cidade selecionada no comboBox
-
-    //A string recebida trás o nome e o estado separados por hifen
-    //A string é quebrada e o estado é atribuido a uma variavel e o nome a outra
-    var array = nomeEestado.split(" - ");
-    String nome = array[0];
-    String estado = array[1];
-
-    //obtem-se as cidades com o mesmo nome
-    CollectionReference ref = FirebaseFirestore.instance.collection("cidades");
-    QuerySnapshot eventsQuery = await ref.where("nome", isEqualTo: nome).get();
-
-    eventsQuery.docs.forEach((document) {
-      //Depois, obtem-se a cidade a onde o estado seja igual ao passado por parametro
-      if (document.data()['estado'] == estado) {
-        Cidade c = Cidade.buscarFirebase(document);
-        c.setID = document.id;
-        _cidade = c;
-      }
-    });
-  }
-
   Future<Null> verificarExistenciaCidade(Cidade cid, bool novoCad) async {
     _existeCadastro = true;
     Cidade c = Cidade();

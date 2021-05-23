@@ -7,7 +7,8 @@ class RelatorioCustoPedidosController {
   PedidoVenda pedido;
   List<List<String>> lista = List<List<String>>();
 
-  Future<Null> obterPedidosBonificacao(DateTime data1, DateTime data2, String tipoPedido) async {
+  Future<Null> obterPedidosBonificacao(
+      DateTime data1, DateTime data2, String tipoPedido) async {
     CollectionReference ref = FirebaseFirestore.instance.collection('pedidos');
     QuerySnapshot obterPedidos =
         await ref.where("tipoPedido", isEqualTo: tipoPedido).get();
@@ -19,9 +20,9 @@ class RelatorioCustoPedidosController {
       if (dataPedido.isAfter(data1) && dataPedido.isBefore(data2)) {
         pedido = PedidoVenda.buscarFirebase(document);
         lista.add([
-          pedido.id.toString(),
-          pedido.labelTelaPedidos,
-          pedido.valorComDesconto.toString()
+          pedido.getID.toString(),
+          pedido.getLabel,
+          pedido.getValorDesconto.toString()
         ]);
       }
     });
@@ -29,7 +30,7 @@ class RelatorioCustoPedidosController {
     print(lista.length);
   }
 
-  void ordenar(){
+  void ordenar() {
     lista.sort();
   }
 }

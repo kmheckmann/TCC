@@ -1,9 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:tcc_3/acessorios/Cores.dart';
 import 'package:tcc_3/controller/ItemPedidoCompraController.dart';
-import 'package:tcc_3/controller/ItemPedidoController.dart';
 import 'package:tcc_3/controller/PedidoCompraController.dart';
-import 'package:tcc_3/controller/PedidoController.dart';
 import 'package:tcc_3/model/ItemPedido.dart';
 import 'package:tcc_3/model/ItemPedidoCompra.dart';
 import 'package:tcc_3/model/PedidoCompra.dart';
@@ -17,7 +16,8 @@ class TelaItensPedidoCompra extends StatefulWidget {
   TelaItensPedidoCompra({this.pedidoCompra, this.itemPedido, this.snapshot});
 
   @override
-  _TelaItensPedidoCompraState createState() => _TelaItensPedidoCompraState(snapshot, pedidoCompra, itemPedido);
+  _TelaItensPedidoCompraState createState() =>
+      _TelaItensPedidoCompraState(snapshot, pedidoCompra, itemPedido);
 }
 
 class _TelaItensPedidoCompraState extends State<TelaItensPedidoCompra> {
@@ -27,33 +27,41 @@ class _TelaItensPedidoCompraState extends State<TelaItensPedidoCompra> {
   ItemPedido itemRemovido;
   ItemPedidoCompraController _controller = ItemPedidoCompraController();
   PedidoCompraController _controllerPedido = PedidoCompraController();
+  Cores cor = Cores();
 
-  _TelaItensPedidoCompraState(this.snapshot, this.pedidoCompra, this.itemPedido);
+  _TelaItensPedidoCompraState(
+      this.snapshot, this.pedidoCompra, this.itemPedido);
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Itens do Pedido"),
         centerTitle: true,
       ),
       floatingActionButton: Visibility(
-        //O Visibility foi adicionado para poder definir quando o botao é apresentado
-        //se o pedido estiver finalizado, o botão nao é apresentado
-        visible: pedidoCompra.pedidoFinalizado ? false : true,
-        child: FloatingActionButton(
-          child: Icon(Icons.add),
-          backgroundColor: Theme.of(context).primaryColor,
-          onPressed: () {
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => TelaCRUDItemPedidoCompra(pedidoCompra: pedidoCompra,))
-            );
-          }
-      )),
+          //O Visibility foi adicionado para poder definir quando o botao é apresentado
+          //se o pedido estiver finalizado, o botão nao é apresentado
+          visible: pedidoCompra.getPedidoFinalizado ? false : true,
+          child: FloatingActionButton(
+              child: Icon(Icons.add),
+              backgroundColor: Theme.of(context).primaryColor,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => TelaCRUDItemPedidoCompra(
+                            pedidoCompra: pedidoCompra,
+                          )),
+                ).then((value) => setState(() {}));
+              })),
       body: FutureBuilder<QuerySnapshot>(
-        //O sistema ira acessar o documento "pedidos" e depois a coleção de itens dos pedidos
-          future: Firestore.instance
-              .collection("pedidos").document(pedidoCompra.id).collection("itens").getDocuments(),
-          builder: (context, snapshot){
+          //O sistema ira acessar o documento "pedidos" e depois a coleção de itens dos pedidos
+          future: FirebaseFirestore.instance
+              .collection("pedidos")
+              .doc(pedidoCompra.getID)
+              .collection("itens")
+              .get(),
+          builder: (context, snapshot) {
             //Como os dados serao buscados do firebase, pode ser que demore para obter
             //entao, enquanto os dados nao sao obtidos sera apresentado um circulo na tela
             //indicando que esta carregando
@@ -64,51 +72,57 @@ class _TelaItensPedidoCompraState extends State<TelaItensPedidoCompra> {
             else
               return ListView.builder(
                   padding: EdgeInsets.all(4.0),
-                  //Pega a quantidade de cidades
-                  itemCount: snapshot.data.documents.length,
-                  //Ira pegar cada cidade no firebase e retornar
-                  itemBuilder: (context, index){
-                    _controller.obterProduto(pedidoCompra.id);
-                    ItemPedido itemPedido = ItemPedidoCompra.buscarFirebase(snapshot.data.documents[index]);
-                    itemPedido.produto = _controller.produto;
-                    return _construirListaPedidos(context, itemPedido, snapshot.data.documents[index], pedidoCompra);
+                  //Pega a quantidade de itens
+                  itemCount: snapshot.data.docs.length,
+                  //Ira pegar cada item no firebase e retornar
+                  itemBuilder: (context, index) {
+                    _controller.obterProduto(pedidoCompra.getID);
+                    ItemPedido itemPedido = ItemPedidoCompra.buscarFirebase(
+                        snapshot.data.docs[index]);
+                    itemPedido.produto = _controller.getProduto;
+                    return _construirListaPedidos(context, itemPedido,
+                        snapshot.data.docs[index], pedidoCompra);
                   });
           }),
     );
   }
 
-  Widget _construirListaPedidos(contexto, ItemPedido p, DocumentSnapshot snapshot, PedidoCompra pedido){
-    if(pedido.pedidoFinalizado){
-     return _codigoLista(contexto, p, snapshot, pedido);
-    }else{
-    return Dismissible(
-      //A key é o que widget dismiss usa pra saber qual item está sendo arrastado
-      //Usei os milisegundos pq cada key precisa ser diferente
-      key: Key(DateTime.now().millisecondsSinceEpoch.toString()),
-      background: Container(
-        color: Colors.red,
-        child: Align(
-          alignment: Alignment(-0.9,0.0),
-          child: Icon(Icons.delete, color: Colors.white),
+  Widget _construirListaPedidos(
+      contexto, ItemPedido p, DocumentSnapshot snapshot, PedidoCompra pedido) {
+    if (pedido.getPedidoFinalizado) {
+      return _codigoLista(contexto, p, snapshot, pedido);
+    } else {
+      return Dismissible(
+        //A key é o que widget dismiss usa pra saber qual item está sendo arrastado
+        //Usei os milisegundos pq cada key precisa ser diferente
+        key: Key(DateTime.now().millisecondsSinceEpoch.toString()),
+        background: Container(
+          color: Colors.red,
+          child: Align(
+            alignment: Alignment(-0.9, 0.0),
+            child: Icon(Icons.delete, color: Colors.white),
+          ),
         ),
-      ),
-      direction: DismissDirection.startToEnd,
-      child: _codigoLista(contexto, p, snapshot, pedido),
-    //o atributo inDismissed obriga que seja informado a direcao como parametro
-    //no atributo direction rentringi para que o card fosse arrastado somente da esquerda para direita
-    //assim a direcao passada sempre sera a mesma, por isso, a direcao nao sera utilizada
-    onDismissed: (direction){
-      itemRemovido = p;
-      _controllerPedido.subtrairPrecoVlTotal(pedido, itemRemovido);
-      pedido.valorTotal = _controllerPedido.pedidoCompra.valorTotal;
-      pedido.valorComDesconto = _controllerPedido.pedidoCompra.valorComDesconto;
-      _controller.removerItem(p,snapshot.documentID, pedido.id, _controllerPedido.converterParaMapa(pedido));
-    },
-    );
-  }
+        direction: DismissDirection.startToEnd,
+        child: _codigoLista(contexto, p, snapshot, pedido),
+        //o atributo inDismissed obriga que seja informado a direcao como parametro
+        //no atributo direction rentringi para que o card fosse arrastado somente da esquerda para direita
+        //assim a direcao passada sempre sera a mesma, por isso, a direcao nao sera utilizada
+        onDismissed: (direction) {
+          itemRemovido = p;
+          _controllerPedido.subtrairPrecoVlTotal(pedido, itemRemovido);
+          pedido.setValorTotal = _controllerPedido.pedidoCompra.getValorTotal;
+          pedido.setValorDesconto =
+              _controllerPedido.pedidoCompra.getValorDesconto;
+          _controller.removerItem(p, snapshot.id, pedido.getID,
+              _controllerPedido.converterParaMapa(pedido));
+        },
+      );
+    }
   }
 
-  Widget _codigoLista(contexto, ItemPedido p, DocumentSnapshot snapshot, PedidoCompra pedido){
+  Widget _codigoLista(
+      contexto, ItemPedido p, DocumentSnapshot snapshot, PedidoCompra pedido) {
     return InkWell(
       //InkWell eh pra dar uma animacao quando clicar no produto
       child: Card(
@@ -116,41 +130,51 @@ class _TelaItensPedidoCompraState extends State<TelaItensPedidoCompra> {
           children: <Widget>[
             //Flexible eh para quebrar a linha caso a descricao do produto seja maior que a largura da tela
             Flexible(
-              //padding: EdgeInsets.all(8.0),
+                //padding: EdgeInsets.all(8.0),
                 child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        snapshot.data()["label"],
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 0, 120, 189),
-                            fontSize: 20.0),
-                      ),
-                      Text(
-                        "Preço: ${snapshot.data()["preco"]}",
-                        style: TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.w500),
-                      ),
-                      Text(
-                        "Qtde: ${snapshot.data()["quantidade"]}",
-                        style: TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.w500),
-                      ),
-                    ],
+              padding: EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    snapshot.data()["label"],
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: cor.corTitulo(!pedido.getPedidoFinalizado),
+                        fontSize: 20.0),
                   ),
-                ))
+                  Text(
+                    "Preço: ${snapshot.data()["preco"]}",
+                    style: TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w500,
+                        color: cor.corSecundaria(!pedido.getPedidoFinalizado)),
+                  ),
+                  Text(
+                    "Qtde: ${snapshot.data()["quantidade"]}",
+                    style: TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w500,
+                        color: cor.corSecundaria(!pedido.getPedidoFinalizado)),
+                  ),
+                ],
+              ),
+            ))
           ],
         ),
       ),
-      onTap: () async{
-        await _controller.obterProduto(pedidoCompra.id);
-        p.produto = _controller.produto;
-        Navigator.of(contexto).push(MaterialPageRoute(builder: (contexto)=>TelaCRUDItemPedidoCompra(pedidoCompra: pedido, itemPedido: p,snapshot: snapshot,)));
+      onTap: () async {
+        await _controller.obterProduto(pedidoCompra.getID);
+        p.produto = _controller.getProduto;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => TelaCRUDItemPedidoCompra(
+                    pedidoCompra: pedido,
+                    itemPedido: p,
+                    snapshot: snapshot,
+                  )),
+        ).then((value) => setState(() {}));
       },
     );
   }

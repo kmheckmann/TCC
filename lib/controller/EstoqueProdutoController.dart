@@ -19,7 +19,7 @@ class EstoqueProdutoController {
 
   String proxID(Pedido p, String idItem, DateTime data) {
     //obtem o id pedido, id item e a hora, minutos e segundos atuais pra formar o id do estoque do item
-    return p.id +
+    return p.getID +
         "-" +
         idItem +
         "-" +
@@ -55,7 +55,7 @@ class EstoqueProdutoController {
     //Busca os dados do pedido
     CollectionReference ref = Firestore.instance
         .collection("pedidos")
-        .document(p.id)
+        .document(p.getID)
         .collection("itens");
     QuerySnapshot _obterItens = await ref.getDocuments();
 
@@ -128,14 +128,14 @@ class EstoqueProdutoController {
     int contador;
     CollectionReference ref = Firestore.instance
         .collection("pedidos")
-        .document(p.id)
+        .document(p.getID)
         .collection("itens");
 
     QuerySnapshot _obterItens = await ref.getDocuments();
 
     _obterItens.documents.forEach((item) async {
       contador = 0;
-      await _controllerProduto.obterProdutoPorID(item.data()["id"]);
+      await _controllerProduto.obterProdutoPorID(id: item.data()["id"]);
       Produto prod = _controllerProduto.produto;
       //Contador da lista
       //recebe a quantidade desejada do produto
@@ -170,14 +170,14 @@ class EstoqueProdutoController {
     //se sim, sera possível finalizar o pedido, caso contrário não será permitido
     CollectionReference ref = Firestore.instance
         .collection("pedidos")
-        .document(pedido.id)
+        .document(pedido.getID)
         .collection("itens");
 
     QuerySnapshot _obterItens = await ref.getDocuments();
     _obterItens.documents.forEach((item) async {
       Produto prod = Produto();
       int qtdeDesejada;
-      _controllerProduto.obterProdutoPorID(item.data()["id"]).whenComplete(() {
+      _controllerProduto.obterProdutoPorID(id: item.data()["id"]).whenComplete(() {
         prod = _controllerProduto.produto;
         //prod = await _controllerProduto.obterProdutoPorID(item.data["id"]);
         print("1 aqui");

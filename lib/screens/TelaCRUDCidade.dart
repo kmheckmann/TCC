@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tcc_3/acessorios/Campos.dart';
 import 'package:tcc_3/acessorios/Cores.dart';
-import 'package:tcc_3/acessorios/Mensagens.dart';
+import 'package:tcc_3/acessorios/Auxiliares.dart';
 import 'package:tcc_3/controller/CidadeController.dart';
 import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/model/Cidade.dart';
@@ -25,7 +25,7 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
   CidadeController _controllerCidade = CidadeController();
   Cores cores = Cores();
   Campos campos = Campos();
-  Mensagens msg = Mensagens();
+  Auxiliares aux = Auxiliares();
 
   //Usado para inserir texto no campo ou obter
   final _controllerNome = TextEditingController();
@@ -106,7 +106,7 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
               _controllerCidade.converterParaMapa(cidade);
 
           if (_novocadastro) {
-            await obterProxID.obterProxID("cidades");
+            await obterProxID.obterProxID(FirebaseFirestore.instance.collection("cidades"));
             cidade.setID = obterProxID.proxID;
             _controllerCidade.persistirCidade(mapa, cidade.getID);
           } else {
@@ -115,12 +115,12 @@ class _TelaCRUDCidadeState extends State<TelaCRUDCidade> {
           //retorna para a listagem das cidades
           Navigator.of(context).pop();
         } else {
-          msg.exibirBarraMensagem(
+          aux.exibirBarraMensagem(
               "Essa cidade já está cadastrada!", Colors.red, _scaffold);
         }
       } else {
         if (_dropdownValue == null) {
-          msg.exibirBarraMensagem(
+          aux.exibirBarraMensagem(
               "É necessário selecionar um Estado!", Colors.red, _scaffold);
         }
       }

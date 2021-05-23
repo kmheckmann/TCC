@@ -10,6 +10,7 @@ class UsuarioController extends Model {
   UsuarioController();
 
   Usuario usuario = Usuario();
+  Usuario userConsultado = Usuario();
 
   //declarado so para nao escrever FirebaseAuth.instance toda hora
   FirebaseAuth _autenticar = FirebaseAuth.instance;
@@ -217,6 +218,17 @@ class UsuarioController extends Model {
       usuario = u;
     });
     return Future.value(u);
+  }
+
+  Future obterUsuarioPorID({String id, VoidCallback terminou}) async {
+    DocumentSnapshot doc =
+        await FirebaseFirestore.instance.collection("usuarios").doc(id).get();
+
+    userConsultado = Usuario.buscarFirebase(doc);
+    userConsultado.setID = doc.id;
+    if (terminou != null) {
+      terminou();
+    }
   }
 
 //Obtem os dados do usuário utilizando o CPF deste

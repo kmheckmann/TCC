@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:tcc_3/model/Produto.dart';
 
 class ProdutoController {
@@ -86,20 +87,12 @@ class ProdutoController {
       }
     }
   }
-
-//Obtem os demais dados do produto usando a descrição deste
-  Future<Null> obterProdutoPorDescricao(String descricao) async {
-    CollectionReference ref = Firestore.instance.collection('produtos');
-    QuerySnapshot eventsQuery =
-        await ref.where("descricao", isEqualTo: descricao).getDocuments();
-    eventsQuery.documents.forEach((document) {
-      Produto p = Produto.buscarFirebase(document);
-      produto = p;
-    });
-  }
-
   //Obtem os demais dados do produto usando o id
-  Future<Produto> obterProdutoPorID(String id) async {
+  Future obterProdutoPorID({String id, VoidCallback terminou}) async {
+    if (id.contains(" - ")) {
+      var array = id.split(" - ");
+      id = array[0];
+    }
     CollectionReference ref = FirebaseFirestore.instance.collection('produtos');
     QuerySnapshot eventsQuery = await ref.get();
     eventsQuery.docs.forEach((document) {
@@ -107,6 +100,8 @@ class ProdutoController {
         produto = Produto.buscarFirebase(document);
       }
     });
-    return await Future.value(produto);
+    if (terminou != null) {
+      terminou();
+    }
   }
 }

@@ -10,19 +10,19 @@ class PedidoVenda extends Pedido {
   PedidoVenda();
 
   PedidoVenda.buscarFirebase(DocumentSnapshot snapshot) {
-    id = snapshot.id;
-    valorTotal = snapshot.data()["valorTotal"];
-    percentualDesconto = snapshot.data()["percentualDesconto"];
-    tipoPagamento = snapshot.data()["tipoPagamento"];
+    setID = snapshot.id;
+    setValorTotal = snapshot.data()["valorTotal"];
+    setPercentDesconto = snapshot.data()["percentualDesconto"];
+    setTipoPgto = snapshot.data()["tipoPagamento"];
     tipoPedido = snapshot.data()["tipoPedido"];
-    ehPedidoVenda = snapshot.data()["ehPedidoVenda"];
+    setEhPedidoVenda = snapshot.data()["ehPedidoVenda"];
     dataPedidoTimeStamp = snapshot.data()["dataPedido"];
-    pedidoFinalizado = snapshot.data()["pedidoFinalizado"];
-    labelTelaPedidos = snapshot.data()["label"];
-    valorComDesconto = snapshot.data()["valorComDesconto"];
+    setPedidoFinalizado = snapshot.data()["pedidoFinalizado"];
+    setLabel = snapshot.data()["label"];
+    setValorDesconto = snapshot.data()["valorComDesconto"];
     dataFinalPedidoTimeStamp = snapshot.data()["dataFinalPedido"];
-    dataPedido = dataPedidoTimeStamp.toDate();
+    setDataPedido = dataPedidoTimeStamp.toDate();
     if (dataFinalPedidoTimeStamp != null)
-      dataFinalPedido = dataFinalPedidoTimeStamp.toDate();
+      setDataFinal = dataFinalPedidoTimeStamp.toDate();
   }
 }

@@ -92,32 +92,34 @@ class _TelaPedidosVendaState extends State<TelaPedidosVenda> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    p.id,
+                    p.getID,
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: cores.corTitulo(!p.pedidoFinalizado),
+                        color: cores.corTitulo(!p.getPedidoFinalizado),
                         fontSize: 20.0),
                   ),
                   Text(
-                    "Fornecedor: ${p.labelTelaPedidos}",
+                    "Fornecedor: ${p.getLabel}",
                     style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w500,
-                        color: cores.corSecundaria(!p.pedidoFinalizado)),
+                        color: cores.corSecundaria(!p.getPedidoFinalizado)),
                   ),
                   Text(
-                    "Data: ${p.dataPedido.day}/${p.dataPedido.month}/${p.dataPedido.year} ${new DateFormat.Hms().format(p.dataPedido)}",
+                    "Data: ${p.getDataPedido.day}/${p.getDataPedido.month}/${p.getDataPedido.year} ${new DateFormat.Hms().format(p.getDataPedido)}",
                     style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w500,
-                        color: cores.corSecundaria(!p.pedidoFinalizado)),
+                        color: cores.corSecundaria(!p.getPedidoFinalizado)),
                   ),
                   Text(
-                    p.pedidoFinalizado ? "Finalizado: Sim" : "Finalizado: Não",
+                    p.getPedidoFinalizado
+                        ? "Finalizado: Sim"
+                        : "Finalizado: Não",
                     style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w500,
-                        color: cores.corSecundaria(!p.pedidoFinalizado)),
+                        color: cores.corSecundaria(!p.getPedidoFinalizado)),
                   )
                 ],
               ),
@@ -127,10 +129,10 @@ class _TelaPedidosVendaState extends State<TelaPedidosVenda> {
       ),
       onTap: () async {
         PedidoVendaController _controller = PedidoVendaController();
-        await _controller.obterEmpresadoPedido(p.id);
-        p.empresa = _controller.empresa;
-        await _controller.obterUsuariodoPedido(p.id);
-        p.user = _controller.usuario;
+        /*await _controller.obterEmpresadoPedido(p.getID);
+        p.setEmpresa = _controller.empresa;
+        await _controller.obterUsuariodoPedido(p.getID);
+        p.setUser = _controller.usuario;*/
         Navigator.of(contexto).push(MaterialPageRoute(
             builder: (contexto) => TelaCRUDPedidoVenda(
                 pedidoVenda: p, snapshot: snapshot, vendedor: u)));

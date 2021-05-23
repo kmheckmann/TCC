@@ -1,15 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:tcc_3/acessorios/Campos.dart';
+import 'package:tcc_3/acessorios/Cores.dart';
 import 'package:tcc_3/controller/EmpresaController.dart';
+import 'package:tcc_3/acessorios/Auxiliares.dart';
 import 'package:tcc_3/controller/EstoqueProdutoController.dart';
+import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/controller/PedidoCompraController.dart';
-import 'package:tcc_3/controller/UsuarioController.dart';
 import 'package:tcc_3/model/Empresa.dart';
 import 'package:tcc_3/model/EstoqueProduto.dart';
 import 'package:tcc_3/model/PedidoCompra.dart';
 import 'package:tcc_3/model/Usuario.dart';
 import 'package:tcc_3/screens/TelaItensPedidoCompra.dart';
-import 'package:intl/intl.dart';
 
 class TelaCRUDPedidoCompra extends StatefulWidget {
   final PedidoCompra pedidoCompra;
@@ -33,8 +37,6 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
 
   final _validadorCampos = GlobalKey<FormState>();
   final _scaffold = GlobalKey<ScaffoldState>();
-  String _dropdownValueTipoPgto;
-  String _dropdownValueFornecedor;
   final _controllerVlTotal = TextEditingController();
   final _controllerVlTotalDesc = TextEditingController();
   final _controllerData = TextEditingController();
@@ -44,46 +46,51 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
   final _controllerVendedor = TextEditingController();
   final _controllerFormaPgto = TextEditingController();
   final _controllerFornecedor = TextEditingController();
-  bool _novocadastro;
-  bool _permiteEditar = true;
-  bool _vlCheckBox;
+  final maskDesconto = MaskTextInputFormatter(mask: "##.##");
+
+  String _dropdownValueTipoPgto;
+  String _dropdownValueFornecedor;
   String _nomeTela;
+  bool _novocadastro;
+
+  Campos campos = Campos();
+  Cores cores = Cores();
   Empresa empresa = Empresa();
+  Auxiliares aux = Auxiliares();
   PedidoCompraController _controllerPedido = PedidoCompraController();
   EmpresaController _controllerEmpresa = EmpresaController();
-  UsuarioController _controllerUsuario = UsuarioController();
   EstoqueProdutoController _controllerEstoque = EstoqueProdutoController();
+  ObterProxIDController _controllerObterPoxID = ObterProxIDController();
 
   @override
   void initState() {
     super.initState();
     if (pedidoCompra != null) {
       _nomeTela = "Editar Pedido";
-      _controllerVlTotal.text = pedidoCompra.valorTotal.toString();
-      _controllerIdPedido.text = pedidoCompra.id;
-      _controllerPercentDesc.text = pedidoCompra.percentualDesconto.toString();
-      _controllerVendedor.text = pedidoCompra.user.getNome;
-      _dropdownValueTipoPgto = pedidoCompra.tipoPagamento;
-      _dropdownValueFornecedor = pedidoCompra.empresa.getNomeFantasia;
-      _controllerVlTotalDesc.text = pedidoCompra.valorComDesconto.toString();
+      _controllerVlTotal.text = pedidoCompra.getValorTotal.toString();
+      _controllerIdPedido.text = pedidoCompra.getID;
+      _controllerPercentDesc.text = pedidoCompra.getPercentDesconto.toString();
+      _controllerVendedor.text = pedidoCompra.getUser.getNome;
+      _dropdownValueTipoPgto = pedidoCompra.getTipoPgto;
+      _dropdownValueFornecedor = pedidoCompra.getEmpresa.getId +
+          " - " +
+          pedidoCompra.getEmpresa.getRazaoSocial;
+      _controllerVlTotalDesc.text = pedidoCompra.getValorDesconto.toString();
       _novocadastro = false;
-      _vlCheckBox = pedidoCompra.pedidoFinalizado;
-      _controllerData.text = _formatarData(pedidoCompra.dataPedido);
-      if (pedidoCompra.dataFinalPedido != null)
-        _controllerDataFinal.text = _formatarData(pedidoCompra.dataFinalPedido);
-      if (pedidoCompra.pedidoFinalizado == true) _permiteEditar = false;
+      _controllerData.text = aux.formatarData(pedidoCompra.getDataPedido);
+      if (pedidoCompra.getDataFinal != null)
+        _controllerDataFinal.text = aux.formatarData(pedidoCompra.getDataFinal);
     } else {
       _nomeTela = "Novo Pedido";
       pedidoCompra = PedidoCompra();
-      pedidoCompra.dataPedido = DateTime.now();
-      pedidoCompra.ehPedidoVenda = false;
-      pedidoCompra.valorTotal = 0.0;
-      pedidoCompra.percentualDesconto = 0.0;
-      //formatar data
-      _controllerData.text = _formatarData(pedidoCompra.dataPedido);
+      pedidoCompra.setDataPedido = DateTime.now();
+      pedidoCompra.setEhPedidoVenda = false;
+      pedidoCompra.setValorTotal = 0.0;
+      pedidoCompra.setPercentDesconto = 0.0;
+      pedidoCompra.setValorDesconto = 0.0;
+      _controllerData.text = aux.formatarData(pedidoCompra.getDataPedido);
       _novocadastro = true;
-      _vlCheckBox = false;
-      pedidoCompra.pedidoFinalizado = false;
+      pedidoCompra.setPedidoFinalizado = false;
       _controllerVendedor.text = vendedor.getNome;
     }
   }
@@ -91,118 +98,95 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffold,
-      appBar: AppBar(
-        title: Text(_nomeTela),
-        centerTitle: true,
-        actions: <Widget>[
-          IconButton(
-              icon: Icon(Icons.loop),
-              onPressed: () async {
-                await _controllerPedido.atualizarCapaPedido(pedidoCompra.id);
-                _controllerVlTotal.text = pedidoCompra.valorTotal.toString();
-                _controllerVlTotalDesc.text =
-                    pedidoCompra.valorComDesconto.toString();
-                _controllerPercentDesc.text =
-                    pedidoCompra.percentualDesconto.toString();
-                _controllerFornecedor.text = _dropdownValueFornecedor;
-                _controllerFormaPgto.text = pedidoCompra.tipoPagamento;
-              })
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.apps),
-          backgroundColor: Colors.blue,
-          onPressed: () async {
-            await _controllerEmpresa
-                .obterEmpresaPorDescricao(_dropdownValueFornecedor);
-            empresa = _controllerEmpresa.getEmpresa;
-            await _controllerUsuario.obterUsuarioPorCPF(vendedor.getCPF);
-            vendedor = _controllerUsuario.usuario;
-            pedidoCompra.pedidoFinalizado = _vlCheckBox;
-
-            if (pedidoCompra.pedidoFinalizado == true &&
-                pedidoCompra.dataFinalPedido == null) {
-              await _controllerPedido.verificarSePedidoTemItens(pedidoCompra);
-
-              if (_controllerPedido.podeFinalizar == true) {
-                _controllerEstoque.gerarEstoque(pedidoCompra);
-                pedidoCompra.dataFinalPedido = DateTime.now();
-                _controllerDataFinal.text =
-                    _formatarData(pedidoCompra.dataFinalPedido);
-                _codigoBotaoSalvar();
-              } else {
-                _scaffold.currentState.showSnackBar(SnackBar(
-                  content: Text(
-                      "O pedido não pode ser finalizado pois não contém itens!"),
-                  backgroundColor: Colors.red,
-                  duration: Duration(seconds: 5),
-                ));
+        key: _scaffold,
+        appBar: AppBar(
+          title: Text(_nomeTela),
+          centerTitle: true,
+          actions: <Widget>[
+            IconButton(
+                icon: Icon(Icons.loop),
+                onPressed: () async {
+                  await _controllerPedido.atualizarCapaPedido(
+                      pedidoCompra.getID, whenCompleteAtualizarCapaPedido);
+                })
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+            child: Icon(Icons.apps),
+            backgroundColor: Colors.blue,
+            onPressed: () async {
+              //verifica se algum fornecedor foi selecionado
+              if (_dropdownValueFornecedor != null) {
+                //obtem os dados da empresa e atribui ao fornecedor
+                await _controllerEmpresa.obterEmpresa(
+                    id: _dropdownValueFornecedor,
+                    terminou: whenCompleteEmpresa);
               }
-            } else {
-              _codigoBotaoSalvar();
-            }
-          }),
-      body: Form(
-          key: _validadorCampos,
-          child: ListView(
-            padding: EdgeInsets.all(8.0),
-            children: <Widget>[
-              _criarCampoTexto(
-                  "Código Pedido", _controllerIdPedido, TextInputType.number),
-              _criarCampoTexto(
-                  "Vendedor", _controllerVendedor, TextInputType.text),
-              _criarCampoTexto(
-                  "Data Pedido", _controllerData, TextInputType.text),
-              _criarCampoTexto(
-                  "Data Finalização", _controllerDataFinal, TextInputType.text),
-              _campoFornecedor(),
-              _campoTipoPgto(),
-              _criarCampoTexto(
-                  "Valor Total", _controllerVlTotal, TextInputType.number),
-              _criarCampoTexto("Valor Total Com Desconto",
-                  _controllerVlTotalDesc, TextInputType.number),
-              TextFormField(
-                enabled: _permiteEditar,
-                controller: _controllerPercentDesc,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(hintText: "% Desconto"),
-                style: _style(),
-                onChanged: (texto) {
-                  pedidoCompra.percentualDesconto = double.parse(texto);
-                  setState(() {
-                    _controllerPedido.calcularDesconto(pedidoCompra);
-                    pedidoCompra.valorComDesconto =
-                        _controllerPedido.pedidoCompra.valorComDesconto;
-                    _controllerVlTotalDesc.text =
-                        pedidoCompra.valorComDesconto.toString();
-                  });
-                },
-              ),
-              _criarCampoCheckBox(),
-            ],
-          )),
-    );
-  }
 
-  Widget _criarCampoTexto(
-      String nome, TextEditingController controller, TextInputType tipo) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: tipo,
-      decoration: InputDecoration(
-          hintText: nome,
-          labelText: nome,
-          labelStyle:
-              TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.w400)),
-      style: TextStyle(color: Colors.grey, fontSize: 17.0),
-      enabled: false,
-    );
+              //A variavel pedidoFinalizado é atualizado conforme o checkbox Finalizado é alterado
+              //Se essa variavel estiver como true e a data final do pedido esta nula
+              //faz a verificacao necessaria para permitir ou nao finalizar o pedido
+              if (pedidoCompra.getPedidoFinalizado == true &&
+                  pedidoCompra.getDataFinal == null) {
+                await _controllerPedido.verificarSePedidoTemItens(pedidoCompra);
+
+                //Verifica o valor da variavel para identificar se pode ou nao finalizar o pedido
+                if (_controllerPedido.getPodeFinalizar == true) {
+                  //se puder, adiciona o estoque nos itens e seta a data final no pedido
+                  //E depois persiste as alterações
+                  _controllerEstoque.gerarEstoque(pedidoCompra);
+                  pedidoCompra.setDataFinal = DateTime.now();
+                  _controllerDataFinal.text =
+                      aux.formatarData(pedidoCompra.getDataFinal);
+                  _codigoBotaoSalvar();
+                } else {
+                  //Se não puder finalizar a variavel PedidoFinalizado volta a ser false
+                  pedidoCompra.setPedidoFinalizado = false;
+                  //o setState é para atualizar a tela de novo
+                  //e fazer com que os campos sejam editaveis novamente
+                  setState(() {});
+                  //uma mensagem é exibida e as alterações não são persistidas
+                  aux.exibirBarraMensagem(
+                      "O pedido não pode ser finalizado pois não contém itens!",
+                      Colors.red,
+                      _scaffold);
+                }
+              } else {
+                //Se não foi marcado o finalizar pedido
+                //só persiste as alterações
+                _codigoBotaoSalvar();
+              }
+            }),
+        body: SingleChildScrollView(
+          padding: EdgeInsets.only(left: 5.0),
+          child: Form(
+              key: _validadorCampos,
+              child: Column(
+                children: [
+                  campos.campoTextoDesabilitado(
+                      _controllerIdPedido, "Código Pedido", false),
+                  campos.campoTextoDesabilitado(
+                      _controllerVendedor, "Vendedor", false),
+                  campos.campoTextoDesabilitado(
+                      _controllerData, "Data Pedido", false),
+                  campos.campoTextoDesabilitado(
+                      _controllerDataFinal, "Data Finalização", false),
+                  _campoFornecedor(),
+                  _campoTipoPgto(),
+                  campos.campoTextoDesabilitado(
+                      _controllerVlTotal, "Valor Total", false),
+                  campos.campoTextoDesabilitado(_controllerVlTotalDesc,
+                      "Valor Total Com Desconto", false),
+                  _campoPercentDesconto(),
+                  _criarCampoCheckBox(),
+                ],
+              )),
+        ));
   }
 
   Widget _criarDropDownTipoPgto() {
     return Container(
-      padding: EdgeInsets.fromLTRB(0.0, 8.0, 8.0, 0.0),
+      padding: EdgeInsets.fromLTRB(5.0, 5.0, 0, 0),
       child: Row(
         children: <Widget>[
           Container(
@@ -214,7 +198,7 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
               onChanged: (String newValue) {
                 setState(() {
                   _dropdownValueTipoPgto = newValue;
-                  pedidoCompra.tipoPagamento = _dropdownValueTipoPgto;
+                  pedidoCompra.setTipoPgto = _dropdownValueTipoPgto;
                 });
               },
               items: <String>['À Vista', 'Cheque', 'Boleto', 'Duplicata']
@@ -233,7 +217,7 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
 
   Widget _criarDropDownFornecedor() {
     return StreamBuilder<QuerySnapshot>(
-        stream: Firestore.instance
+        stream: FirebaseFirestore.instance
             .collection('empresas')
             .where('ehFornecedor', isEqualTo: true)
             .snapshots(),
@@ -243,10 +227,10 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
               child: CircularProgressIndicator(),
             );
           } else {
-            var length = snapshot.data.documents.length;
-            DocumentSnapshot ds = snapshot.data.documents[length - 1];
+            var length = snapshot.data.docs.length;
+            DocumentSnapshot ds = snapshot.data.docs[length - 1];
             return Container(
-              padding: EdgeInsets.fromLTRB(0.0, 8.0, 8.0, 0.0),
+              padding: EdgeInsets.fromLTRB(5.0, 5.0, 0, 0),
               child: Row(
                 children: <Widget>[
                   Container(
@@ -258,16 +242,19 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
                       onChanged: (String newValue) {
                         setState(() {
                           _dropdownValueFornecedor = newValue;
-                          pedidoCompra.labelTelaPedidos =
-                              _dropdownValueFornecedor;
                         });
                       },
-                      items: snapshot.data.documents
-                          .map((DocumentSnapshot document) {
+                      items:
+                          snapshot.data.docs.map((DocumentSnapshot document) {
                         return DropdownMenuItem<String>(
-                            value: document.data()['razaoSocial'],
+                            value: document.id +
+                                " - " +
+                                document.data()['razaoSocial'],
                             child: Container(
-                              child: Text(document.data()['razaoSocial'],
+                              child: Text(
+                                  document.id +
+                                      " - " +
+                                      document.data()['razaoSocial'],
                                   style: TextStyle(color: Colors.black)),
                             ));
                       }).toList(),
@@ -286,22 +273,24 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
       child: Row(
         children: <Widget>[
           Checkbox(
-            value: _vlCheckBox == true,
-            onChanged: pedidoCompra.pedidoFinalizado
+            value: pedidoCompra.getPedidoFinalizado == true,
+            onChanged: pedidoCompra.getPedidoFinalizado
                 ? null
                 : (bool novoValor) {
                     setState(() {
                       if (novoValor) {
-                        _vlCheckBox = true;
+                        pedidoCompra.setPedidoFinalizado = true;
                       } else {
-                        _vlCheckBox = false;
+                        pedidoCompra.setPedidoFinalizado = false;
                       }
                     });
                   },
           ),
           Text(
             "Finalizado?",
-            style: _style(),
+            style: TextStyle(
+                color: cores.corCampo(!pedidoCompra.getPedidoFinalizado),
+                fontSize: 17.0),
           ),
         ],
       ),
@@ -309,79 +298,113 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
   }
 
   void _codigoBotaoSalvar() async {
-    // método criado para não precisar repetir duas vezes o mesmo codigo na hora que clica no salvar
     if (_dropdownValueTipoPgto != null && _dropdownValueFornecedor != null) {
+      //Se o tipo de pgto e fornecedor terem sido selecionados, segue o processo para persistir
       Map<String, dynamic> mapa =
           _controllerPedido.converterParaMapa(pedidoCompra);
       Map<String, dynamic> mapaVendedor = Map();
       mapaVendedor["id"] = vendedor.getID;
       Map<String, dynamic> mapaEmpresa = Map();
       mapaEmpresa["id"] = empresa.getId;
-      pedidoCompra.pedidoFinalizado = _vlCheckBox;
 
       if (_novocadastro) {
+        //Se for um novo cadastro, gera ID para o pedido e persiste
         _novocadastro = false;
-        await _controllerPedido.obterProxID();
-        pedidoCompra.id = _controllerPedido.proxID;
+        await _controllerObterPoxID.obterProxID(FirebaseFirestore.instance.collection("pedidos"));
+        pedidoCompra.setID = _controllerObterPoxID.proxID;
         _controllerPedido.persistirAlteracoesPedido(
-            mapa, mapaEmpresa, mapaVendedor, pedidoCompra.id);
+            mapa, mapaEmpresa, mapaVendedor, pedidoCompra.getID);
       } else {
+        //se nao for novo cadastro, só persiste pois já tem ID
         _controllerPedido.persistirAlteracoesPedido(
-            mapa, mapaEmpresa, mapaVendedor, pedidoCompra.id);
+            mapa, mapaEmpresa, mapaVendedor, pedidoCompra.getID);
       }
+      //Ao salvar, direciona o user para a proxima tela (de itens do pedido)
       Navigator.of(context).push(MaterialPageRoute(
           builder: (contexto) => TelaItensPedidoCompra(
                 pedidoCompra: pedidoCompra,
                 snapshot: snapshot,
               )));
     } else {
-      _scaffold.currentState.showSnackBar(SnackBar(
-        content: Text("Todos os campos da tela devem ser informados!"),
-        backgroundColor: Colors.red,
-        duration: Duration(seconds: 5),
-      ));
-    }
-  }
+      //Exibe mensagem caso tipo de pgto e fornecedor nao tenham sido informados
+      if (_dropdownValueTipoPgto == null) {
+        aux.exibirBarraMensagem(
+            "O tipo de pagamento deve ser selecionado!", Colors.red, _scaffold);
+      }
 
-  TextStyle _style() {
-    if (pedidoCompra.pedidoFinalizado) {
-      return TextStyle(color: Colors.grey, fontSize: 17.0);
-    } else {
-      return TextStyle(color: Colors.black, fontSize: 17.0);
+      if (_dropdownValueFornecedor == null) {
+        aux.exibirBarraMensagem(
+            "O fornecedor deve ser selecionado!", Colors.red, _scaffold);
+      }
     }
-  }
-
-  String _formatarData(DateTime data) {
-    return (data.day.toString() +
-        "/" +
-        data.month.toString() +
-        "/" +
-        data.year.toString() +
-        " " +
-        (new DateFormat.Hms().format(data)));
   }
 
   Widget _campoTipoPgto() {
-    _controllerFormaPgto.text = pedidoCompra.tipoPagamento;
+    _controllerFormaPgto.text = pedidoCompra.getTipoPgto;
     //se o pedido estiver finalizado sera criado um TextField com o valor
     //se não estiver, sera criado o dropDown
-    if (pedidoCompra.pedidoFinalizado) {
-      return _criarCampoTexto(
-          "Tipo Pagamento", _controllerFormaPgto, TextInputType.text);
+    if (pedidoCompra.getPedidoFinalizado) {
+      return campos.campoTextoDesabilitado(
+          _controllerFormaPgto, "Tipo Pagamento", false);
     } else {
       return _criarDropDownTipoPgto();
     }
   }
 
+  Widget _campoPercentDesconto() {
+    return Container(
+      padding: EdgeInsets.fromLTRB(5.0, 5.0, 0, 0),
+      child: TextFormField(
+        enabled: !pedidoCompra.getPedidoFinalizado,
+        controller: _controllerPercentDesc,
+        inputFormatters: [maskDesconto],
+        keyboardType: TextInputType.number,
+        decoration: InputDecoration(
+            hintText: "% Desconto",
+            labelText: "% Desconto",
+            labelStyle: TextStyle(
+                color: cores.corLabel(), fontWeight: FontWeight.w400)),
+        style: TextStyle(
+            color: cores.corCampo(!pedidoCompra.getPedidoFinalizado),
+            fontSize: 17.0),
+        onChanged: (texto) {
+          if (texto.isNotEmpty) {
+            pedidoCompra.setPercentDesconto = double.parse(texto);
+          }
+          setState(() {
+            _controllerPedido.calcularDesconto(pedidoCompra);
+            pedidoCompra.setValorDesconto =
+                _controllerPedido.pedidoCompra.getValorDesconto;
+            _controllerVlTotalDesc.text =
+                pedidoCompra.getValorDesconto.toString();
+          });
+        },
+      ),
+    );
+  }
+
   Widget _campoFornecedor() {
-    _controllerFornecedor.text = pedidoCompra.empresa.getNomeFantasia;
+    _controllerFornecedor.text = pedidoCompra.getEmpresa.getNomeFantasia;
     //se o pedido estiver finalizado sera criado um TextField com o valor
     //se não estiver, sera criado o dropDown
-    if (pedidoCompra.pedidoFinalizado) {
-      return _criarCampoTexto(
-          "Fornecedor", _controllerFornecedor, TextInputType.text);
+    if (pedidoCompra.getPedidoFinalizado) {
+      return campos.campoTextoDesabilitado(
+          _controllerFornecedor, "Fornecedor", false);
     } else {
       return _criarDropDownFornecedor();
     }
+  }
+
+  void whenCompleteEmpresa() {
+    empresa = _controllerEmpresa.getEmpresa;
+    pedidoCompra.setLabel = empresa.getRazaoSocial;
+  }
+
+  void whenCompleteAtualizarCapaPedido() {
+    _controllerVlTotal.text = pedidoCompra.getValorTotal.toString();
+    _controllerVlTotalDesc.text = pedidoCompra.getValorDesconto.toString();
+    _controllerPercentDesc.text = pedidoCompra.getPercentDesconto.toString();
+    _controllerFornecedor.text = _dropdownValueFornecedor;
+    _controllerFormaPgto.text = pedidoCompra.getTipoPgto;
   }
 }

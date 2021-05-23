@@ -96,7 +96,7 @@ class _TelaCRUDCategoriaState extends State<TelaCRUDCategoria> {
           controllerCategoria.converterParaMapa(categoria);
 
       if (_novocadastro) {
-        await proxID.obterProxID("categorias");
+        await proxID.obterProxID(FirebaseFirestore.instance.collection("categorias"));
         categoria.setID = proxID.proxID;
         controllerCategoria.persistirCategoria(mapa, categoria.getID);
       } else {

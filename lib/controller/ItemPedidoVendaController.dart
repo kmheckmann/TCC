@@ -8,7 +8,7 @@ class ItemPedidoVendaController extends ItemPedidoController {
   @override
   void persistirItem(ItemPedido item, String idPedido, String idProduto,
       Map<String, dynamic> dadosPedido) {
-    this.dadosPedido = dadosPedido;
+    setDadosPedido = dadosPedido;
 
 //Grava as informações do item do pedido
     FirebaseFirestore.instance

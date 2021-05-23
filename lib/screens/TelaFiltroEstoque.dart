@@ -38,7 +38,7 @@ class _TelaFiltroEstoqueState extends State<TelaFiltroEstoque> {
             //Ao clicar no botão para consultar, se houver algo selecionado vai buscar as informações do produto
             //E direcionar para a tela que apresenta os resultados com o produto filtrado
             await _controllerProduto
-                .obterProdutoPorDescricao(_dropdownValueProduto);
+                .obterProdutoPorID(id: _dropdownValueProduto);
             p = _controllerProduto.produto;
             await _controllerEstoque.obterEstoqueProduto(p);
             this.estoques = _controllerEstoque.estoques;
