@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/controller/ProdutoController.dart';
 import 'package:tcc_3/model/EstoqueProduto.dart';
 import 'package:tcc_3/model/Pedido.dart';
@@ -6,6 +7,8 @@ import 'package:tcc_3/model/PedidoVenda.dart';
 import 'package:tcc_3/model/Produto.dart';
 
 class EstoqueProdutoController {
+  ObterProxIDController _controllerProxID = ObterProxIDController();
+
   EstoqueProdutoController();
 
   Map<String, dynamic> dadosEstoqueProduto = Map();
@@ -16,20 +19,6 @@ class EstoqueProdutoController {
   bool permitirFinalizarPedidoVenda;
   int qtdeExistente = 0;
   double precoVenda = 0;
-
-  String proxID(Pedido p, String idItem, DateTime data) {
-    //obtem o id pedido, id item e a hora, minutos e segundos atuais pra formar o id do estoque do item
-    return p.getID +
-        "-" +
-        idItem +
-        "-" +
-        data.day.toString() +
-        data.month.toString() +
-        data.year.toString() +
-        data.hour.toString() +
-        data.minute.toString() +
-        data.second.toString();
-  }
 
   Map<String, dynamic> converterParaMapa(EstoqueProduto estoqueProduto) {
     return {
@@ -53,20 +42,21 @@ class EstoqueProdutoController {
 //Método chamado ao finalizar o pedido de compra
   Future<Null> gerarEstoque(Pedido p) async {
     //Busca os dados do pedido
-    CollectionReference ref = Firestore.instance
+    CollectionReference ref = FirebaseFirestore.instance
         .collection("pedidos")
-        .document(p.getID)
+        .doc(p.getID)
         .collection("itens");
-    QuerySnapshot _obterItens = await ref.getDocuments();
+    QuerySnapshot _obterItens = await ref.get();
 
 //Para cada item do pedido obtem a quantidade e o preço da compra e salva um novo lote do produto
 //Aumentando a quantidade em estoque deste item
-    _obterItens.documents.forEach((item) {
+    _obterItens.docs.forEach((item) {
       EstoqueProduto estoque = EstoqueProduto();
       estoque.dataAquisicao = DateTime.now();
       estoque.quantidade = item["quantidade"];
       estoque.precoCompra = item["preco"];
-      estoque.id = proxID(p, item.documentID, estoque.dataAquisicao);
+      estoque.id =
+          _controllerProxID.proxIDEstoque(p, item.id, estoque.dataAquisicao);
       Map<String, dynamic> mapa = converterParaMapa(estoque);
       salvarEstoqueProduto(mapa, item.data()["id"], estoque.id);
     });
@@ -177,7 +167,9 @@ class EstoqueProdutoController {
     _obterItens.documents.forEach((item) async {
       Produto prod = Produto();
       int qtdeDesejada;
-      _controllerProduto.obterProdutoPorID(id: item.data()["id"]).whenComplete(() {
+      _controllerProduto
+          .obterProdutoPorID(id: item.data()["id"])
+          .whenComplete(() {
         prod = _controllerProduto.produto;
         //prod = await _controllerProduto.obterProdutoPorID(item.data["id"]);
         print("1 aqui");

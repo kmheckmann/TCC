@@ -56,7 +56,7 @@ class _TelaPedidosCompraState extends State<TelaPedidosCompra> {
               future: FirebaseFirestore.instance
                   .collection("pedidos")
                   .where("ehPedidoVenda", isEqualTo: false)
-                  .orderBy("pedidoFinalizado", descending: true)
+                  .orderBy("pedidoFinalizado", descending: false)
                   .get(),
               builder: (context, snapshot) {
                 //Como os dados serao buscados do firebase, pode ser que demore para obter

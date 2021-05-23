@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tcc_3/model/Pedido.dart';
 
 class ObterProxIDController {
   String proxID;
@@ -25,5 +26,19 @@ class ObterProxIDController {
 
     idTemp = idTemp + 1;
     proxID = idTemp.toString();
+  }
+
+  String proxIDEstoque(Pedido p, String idItem, DateTime data) {
+    //obtem o id pedido, id item e a hora, minutos e segundos atuais pra formar o id do estoque do item
+    return p.getID +
+        "-" +
+        idItem +
+        "-" +
+        data.day.toString() +
+        data.month.toString() +
+        data.year.toString() +
+        data.hour.toString() +
+        data.minute.toString() +
+        data.second.toString();
   }
 }
