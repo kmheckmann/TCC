@@ -155,7 +155,7 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
                   ? _criarCampoTexto(_controllerPreco, "Preço",
                       TextInputType.number, maskPreco)
                   : campos.campoTextoDesabilitado(
-                      _controllerPreco, "Preço", false),
+                      _controllerPreco, "Preço unitário", false),
               !pedidoCompra.getPedidoFinalizado
                   ? _criarCampoTexto(_controllerQtde, "Quantidade",
                       TextInputType.number, maskQtde)

@@ -166,7 +166,7 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
                   campos.campoTextoDesabilitado(
                       _controllerIdPedido, "Código Pedido", false),
                   campos.campoTextoDesabilitado(
-                      _controllerVendedor, "Vendedor", false),
+                      _controllerVendedor, "Usuário", false),
                   campos.campoTextoDesabilitado(
                       _controllerData, "Data Pedido", false),
                   campos.campoTextoDesabilitado(

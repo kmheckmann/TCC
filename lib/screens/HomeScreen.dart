@@ -56,7 +56,7 @@ class HomeScreen extends StatelessWidget {
         ),
         Scaffold(
           appBar: AppBar(
-            title: Text("Consulta de Estoque"),
+            title: Text("Filtro Consulta de Estoque"),
             centerTitle: true,
           ),
           drawer: Menu(_pageController),

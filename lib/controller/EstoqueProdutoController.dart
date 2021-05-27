@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:tcc_3/controller/ObterProxIDController.dart';
 import 'package:tcc_3/controller/ProdutoController.dart';
 import 'package:tcc_3/model/EstoqueProduto.dart';
@@ -11,14 +12,62 @@ class EstoqueProdutoController {
 
   EstoqueProdutoController();
 
-  Map<String, dynamic> dadosEstoqueProduto = Map();
+  Map<String, dynamic> _dadosEstoqueProduto = Map();
   ProdutoController _controllerProduto = ProdutoController();
-  List<EstoqueProduto> estoques = List<EstoqueProduto>();
-  List<Produto> produtos = List<Produto>();
-  bool produtoTemEstoque = false;
-  bool permitirFinalizarPedidoVenda;
-  int qtdeExistente = 0;
-  double precoVenda = 0;
+  List<EstoqueProduto> _estoques = [];
+  List<Produto> _produtos = [];
+  bool _produtoTemEstoque = false;
+  bool _permitirFinalizarPedidoVenda;
+  int _qtdeExistente = 0;
+  double _precoVenda = 0;
+
+  List<EstoqueProduto> get getEstoques {
+    return _estoques;
+  }
+
+  set setEstoques(List<EstoqueProduto> estoques) {
+    _estoques = estoques;
+  }
+
+  List<Produto> get getProdutos {
+    return _produtos;
+  }
+
+  set setProdutos(List<Produto> prods) {
+    _produtos = prods;
+  }
+
+  bool get getProdutoTemEstoque {
+    return _produtoTemEstoque;
+  }
+
+  set setProdutoTemEstoque(bool tem) {
+    _produtoTemEstoque = tem;
+  }
+
+  bool get getPermitirFinalizarPedidoVenda {
+    return _permitirFinalizarPedidoVenda;
+  }
+
+  set setPermitirFinalizarPedidoVenda(bool permite) {
+    _permitirFinalizarPedidoVenda = permite;
+  }
+
+  int get getQtdeExistente {
+    return _qtdeExistente;
+  }
+
+  set setQtdeExistente(int qtde) {
+    _qtdeExistente = qtde;
+  }
+
+  double get getPrecoVenda {
+    return _precoVenda;
+  }
+
+  set setPrecoVenda(double precoVenda) {
+    _precoVenda = precoVenda;
+  }
 
   Map<String, dynamic> converterParaMapa(EstoqueProduto estoqueProduto) {
     return {
@@ -30,13 +79,13 @@ class EstoqueProdutoController {
 
   Future<Null> salvarEstoqueProduto(Map<String, dynamic> dadosEstoqueProduto,
       String idProduto, String idEstoque) async {
-    this.dadosEstoqueProduto = dadosEstoqueProduto;
-    await Firestore.instance
+    _dadosEstoqueProduto = dadosEstoqueProduto;
+    await FirebaseFirestore.instance
         .collection("produtos")
-        .document(idProduto)
+        .doc(idProduto)
         .collection("estoque")
-        .document(idEstoque)
-        .setData(dadosEstoqueProduto);
+        .doc(idEstoque)
+        .set(_dadosEstoqueProduto);
   }
 
 //Método chamado ao finalizar o pedido de compra
@@ -63,30 +112,33 @@ class EstoqueProdutoController {
   }
 
 //Método usado na consulta de estoque
-  Future<List> obterEstoqueProduto(Produto p) async {
-    qtdeExistente = 0;
+  Future obterEstoqueProduto({Produto p, VoidCallback terminou}) async {
+    _qtdeExistente = 0;
     //Obtém todos os estoque disponiveis
-    CollectionReference ref = Firestore.instance
+    CollectionReference ref = FirebaseFirestore.instance
         .collection("produtos")
-        .document(p.getID)
+        .doc(p.getID)
         .collection("estoque");
     QuerySnapshot _obterEstoque =
-        await ref.where("quantidade", isGreaterThan: 0).getDocuments();
+        await ref.where("quantidade", isGreaterThan: 0).get();
 
     //Adiciona cada registro na lista
-    _obterEstoque.documents.forEach((document) {
+    _obterEstoque.docs.forEach((document) {
       EstoqueProduto e = EstoqueProduto();
       e = EstoqueProduto.buscarFirebase(document);
-      estoques.add(e);
+      _estoques.add(e);
     });
-    return Future.value(estoques);
+
+    if (terminou != null) {
+      terminou();
+    }
   }
 
   int retornarQtdeExistente(Produto p) {
     int qtde = 0;
-    obterEstoqueProduto(p);
-    estoques.forEach((p) {
-      if (estoques.length > 0) {
+    obterEstoqueProduto(p: p);
+    _estoques.forEach((p) {
+      if (_estoques.length > 0) {
         qtde += p.quantidade;
       }
     });
@@ -100,17 +152,17 @@ class EstoqueProdutoController {
   Future<Null> verificarSeProdutoTemEstoqueDisponivel(
       Produto p, int quantidadeDesejada) async {
     //Contador para a quantidade de todos os lotes do item
-    qtdeExistente = 0;
+    _qtdeExistente = 0;
     //Chama o método abaixo para obter todo o estoque do item
-    obterEstoqueProduto(p);
+    obterEstoqueProduto(p: p);
 
     //para cada registro existente, adicionada no contador a quantidade total do lote do estoque
-    estoques.forEach((estoqueProduto) {
-      qtdeExistente += estoqueProduto.quantidade;
+    _estoques.forEach((estoqueProduto) {
+      _qtdeExistente += estoqueProduto.quantidade;
     });
 
 //Se a quantidade existente de estoque for maior ou igual a desejada, atribui true na variavel
-    if (qtdeExistente >= quantidadeDesejada) produtoTemEstoque = true;
+    if (_qtdeExistente >= quantidadeDesejada) _produtoTemEstoque = true;
   }
 
 //Esse método será utilizado no pedido de venda após constatar que existe estoque suficiente disponivel do produto desejado
@@ -132,24 +184,24 @@ class EstoqueProdutoController {
       int qtdeDesejada = item.data()["quantidade"];
 
       //Obtem todo o estoque do produto
-      await obterEstoqueProduto(prod);
+      await obterEstoqueProduto(p: prod);
       //Enquanto a quantidade desejada nao estiver zerada será realizado a ação abaixo
       do {
         //Se o lote verificado possuir quantidade maior do que a qtde desejada
         //Subtrai o valor da quantidade desejada e salva a quantidade restante no banco
-        if (estoques[contador].quantidade > qtdeDesejada) {
-          estoques[contador].quantidade -= qtdeDesejada;
+        if (_estoques[contador].quantidade > qtdeDesejada) {
+          _estoques[contador].quantidade -= qtdeDesejada;
           qtdeDesejada = 0;
         } else {
           //Caso o lote tenha quantidade menor que a qtde desejada
           //Remove-se da quantidade desejada o que o produto tem de quantidade no estoque
           //Zera a quantidade de estoque do item e salva isso no banco
           //Repete o processo até a quantidade desejada ficar zerada
-          qtdeDesejada -= estoques[contador].quantidade;
-          estoques[contador].quantidade = 0;
+          qtdeDesejada -= _estoques[contador].quantidade;
+          _estoques[contador].quantidade = 0;
         }
-        Map<String, dynamic> mapa = converterParaMapa(estoques[contador]);
-        salvarEstoqueProduto(mapa, prod.getID, estoques[contador].id);
+        Map<String, dynamic> mapa = converterParaMapa(_estoques[contador]);
+        salvarEstoqueProduto(mapa, prod.getID, _estoques[contador].id);
         contador += 1;
       } while (qtdeDesejada != 0);
     });
@@ -180,22 +232,22 @@ class EstoqueProdutoController {
         qtdeDesejada = item.data()["quantidade"];
       });
 
-      qtdeExistente = 0;
+      _qtdeExistente = 0;
       //Chama o método abaixo para obter todo o estoque do item
-      await obterEstoqueProduto(prod).whenComplete(() {
+      await obterEstoqueProduto(p: prod).whenComplete(() {
         print("aqui 2");
-        print(estoques.length);
-        print(qtdeExistente);
+        print(_estoques.length);
+        print(_qtdeExistente);
 
         //para cada registro existente, adicionada no contador a quantidade total do lote do estoque
-        estoques.forEach((estoqueProduto) {
-          qtdeExistente += estoqueProduto.quantidade;
-          print(qtdeExistente);
+        _estoques.forEach((estoqueProduto) {
+          _qtdeExistente += estoqueProduto.quantidade;
+          print(_qtdeExistente);
           print(qtdeDesejada);
 
-          if (qtdeDesejada >= qtdeExistente) {
-            qtdeExistente = 0;
-            permitirFinalizarPedidoVenda = false;
+          if (qtdeDesejada >= _qtdeExistente) {
+            _qtdeExistente = 0;
+            _permitirFinalizarPedidoVenda = false;
           }
         });
       });
@@ -209,16 +261,16 @@ class EstoqueProdutoController {
     double preco = 0;
     double maiorPrecoCompra = 0;
 
-    await obterEstoqueProduto(p);
+    await obterEstoqueProduto(p: p);
 
-    estoques.forEach((item) {
+    _estoques.forEach((item) {
       preco = item.precoCompra;
       if (preco > maiorPrecoCompra) {
         maiorPrecoCompra = preco;
       }
     });
 
-    precoVenda =
+    _precoVenda =
         ((p.getPercentLucro / 100) * maiorPrecoCompra) + maiorPrecoCompra;
   }
 }

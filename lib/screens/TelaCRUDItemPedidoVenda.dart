@@ -55,13 +55,13 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
   void initState() {
     super.initState();
     if (itemPedido != null) {
-      _controllerEstoque.obterEstoqueProduto(produto);
+      _controllerEstoque.obterEstoqueProduto(p: produto);
       _nomeTela = "Editar Produto";
       vlItemAntigo = itemPedido.preco;
       _dropdownValueProduto = itemPedido.produto.getDescricao;
       _controllerPreco.text = itemPedido.preco.toString();
       _controllerQtde.text = itemPedido.quantidade.toString();
-      _controllerProdQtde.text = _controllerEstoque.qtdeExistente.toString();
+      _controllerProdQtde.text = _controllerEstoque.getQtdeExistente.toString();
       _novocadastro = false;
     } else {
       _nomeTela = "Novo Produto";
@@ -146,7 +146,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
                         //Faz o calculo do preco de venda e seta o valor no campo
                         await _controllerEstoque.obterPrecoVenda(produto);
                         _controllerPreco.text =
-                            _controllerEstoque.precoVenda.toString();
+                            _controllerEstoque.getPrecoVenda.toString();
                         setState(() {
                           _dropdownValueProduto = newValue;
                           _controllerProdQtde.text = _controllerEstoque

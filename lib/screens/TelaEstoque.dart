@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:tcc_3/acessorios/Auxiliares.dart';
+import 'package:tcc_3/acessorios/Cores.dart';
 import 'package:tcc_3/model/EstoqueProduto.dart';
 import 'package:tcc_3/screens/HomeScreen.dart';
 
@@ -11,8 +12,10 @@ class TelaEstoque extends StatefulWidget {
 }
 
 class _TelaEstoqueState extends State<TelaEstoque> {
-  List<EstoqueProduto> estoques = List<EstoqueProduto>();
+  List<EstoqueProduto> estoques = [];
   _TelaEstoqueState({this.estoques});
+  Auxiliares aux = Auxiliares();
+  Cores cores = Cores();
 
   @override
   void initState() {
@@ -23,6 +26,8 @@ class _TelaEstoqueState extends State<TelaEstoque> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        //Na barra no topo da tela cria um icone de uma seta
+        //Ao clicar nesse icone retorna para a tela inicial
         automaticallyImplyLeading: false,
         leading: Builder(
           builder: (BuildContext context) {
@@ -39,7 +44,8 @@ class _TelaEstoqueState extends State<TelaEstoque> {
         title: Text("Consulta de Estoque"),
         centerTitle: true,
       ),
-      //Botão para retornar a tela de filtro
+      //Para retornar a tela de filtro
+      //Deve-se clicar no botao na parte inferior direita da tela
       floatingActionButton: FloatingActionButton(
           child: Icon(Icons.filter_list),
           backgroundColor: Theme.of(context).primaryColor,
@@ -55,7 +61,7 @@ class _TelaEstoqueState extends State<TelaEstoque> {
     );
   }
 
-//Coloca em cards todos os lotes de produtos com as informações de cada lote
+  //Coloca em cards todos os lotes de produtos com as informações de cada lote
   Widget _construirListaEstoque(estoques, index) {
     EstoqueProduto e = estoques[index];
     return InkWell(
@@ -75,28 +81,28 @@ class _TelaEstoqueState extends State<TelaEstoque> {
                     "Lote: ${e.id}",
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 0, 120, 189),
+                        color: cores.corTitulo(true),
                         fontSize: 20.0),
                   ),
                   Text(
                     "Qtde: ${e.quantidade.toString()}",
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: cores.corSecundaria(true),
                         fontSize: 17.0),
                   ),
                   Text(
-                    "Dt Aquisição: ${_formatarData(e)}",
+                    "Dt Aquisição: ${aux.formatarData(e.dataAquisicao)}",
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: cores.corSecundaria(true),
                         fontSize: 17.0),
                   ),
                   Text(
                     "Preço Compra: ${e.precoCompra.toString()}",
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: cores.corSecundaria(true),
                         fontSize: 17.0),
                   ),
                 ],
@@ -107,15 +113,5 @@ class _TelaEstoqueState extends State<TelaEstoque> {
       ),
       onTap: () {},
     );
-  }
-
-  String _formatarData(EstoqueProduto e) {
-    return (e.dataAquisicao.day.toString() +
-        "/" +
-        e.dataAquisicao.month.toString() +
-        "/" +
-        e.dataAquisicao.year.toString() +
-        " " +
-        (new DateFormat.Hms().format(e.dataAquisicao)));
   }
 }
