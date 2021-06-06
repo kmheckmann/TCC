@@ -26,6 +26,20 @@ class _TelaTrocarSenhaState extends State<TelaTrocarSenha> {
       return Scaffold(
           key: _scaffold,
           appBar: AppBar(
+            //Na barra no topo da tela cria um icone de uma seta
+            //Ao clicar nesse icone retorna para a tela inicial
+            automaticallyImplyLeading: false,
+            leading: Builder(
+              builder: (BuildContext context) {
+                return IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => HomeScreen()));
+                  },
+                );
+              },
+            ),
             title: Text("Troca de Senha"),
             centerTitle: true,
           ),

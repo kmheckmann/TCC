@@ -6,9 +6,17 @@ import 'package:tcc_3/model/Pedido.dart';
 import 'package:tcc_3/model/PedidoVenda.dart';
 
 class PedidoVendaController extends PedidoController {
-  PedidoVenda pedidoVenda = PedidoVenda();
-
   PedidoVendaController();
+
+  PedidoVenda _pedidoVenda = PedidoVenda();
+
+  PedidoVenda get getPedidoVenda {
+    return _pedidoVenda;
+  }
+
+  set setPedidoVenda(PedidoVenda pedidoVenda) {
+    _pedidoVenda = pedidoVenda;
+  }
 
   Map<String, dynamic> converterParaMapaPedidoVenda(PedidoVenda p) {
     return {
@@ -61,12 +69,12 @@ class PedidoVendaController extends PedidoController {
   void calcularDesconto(Pedido p) {
     if (p.getValorTotal != 0 || p.getValorTotal == 0) {
       double vlDesc = (p.getPercentDesconto / 100) * p.getValorTotal;
-      pedidoVenda.setValorDesconto = (p.getValorTotal - vlDesc);
-      pedidoVenda.setValorDesconto =
-          num.parse(pedidoVenda.getValorDesconto.toStringAsFixed(2));
+      _pedidoVenda.setValorDesconto = (p.getValorTotal - vlDesc);
+      _pedidoVenda.setValorDesconto =
+          num.parse(_pedidoVenda.getValorDesconto.toStringAsFixed(2));
     } else {
       //Exceção para o caso de o desconto ser informado antes do pedido ter algum valor
-      pedidoVenda.setValorDesconto = 0;
+      getPedidoVenda.setValorDesconto = 0;
     }
   }
 
@@ -76,9 +84,9 @@ class PedidoVendaController extends PedidoController {
     double valorTotalItem = novoItem.preco * novoItem.quantidade;
     valorTotalItem = num.parse(valorTotalItem.toStringAsFixed(2));
     p.setValorTotal = p.getValorTotal + valorTotalItem;
-    pedidoVenda.setValorTotal = p.getValorTotal;
-    pedidoVenda.setValorTotal =
-        num.parse(pedidoVenda.getValorTotal.toStringAsFixed(2));
+    _pedidoVenda.setValorTotal = p.getValorTotal;
+    _pedidoVenda.setValorTotal =
+        num.parse(_pedidoVenda.getValorTotal.toStringAsFixed(2));
     calcularDesconto(p);
   }
 
@@ -95,7 +103,7 @@ class PedidoVendaController extends PedidoController {
   void subtrairPrecoVlTotal(Pedido p, ItemPedido itemExcluido) {
     double valorTotalItem = itemExcluido.preco * itemExcluido.quantidade;
     p.setValorTotal = p.getValorTotal - valorTotalItem;
-    pedidoVenda.setValorTotal = p.getValorTotal;
+    _pedidoVenda.setValorTotal = p.getValorTotal;
     calcularDesconto(p);
   }
 
@@ -107,8 +115,9 @@ class PedidoVendaController extends PedidoController {
 
     _obterPedido.docs.forEach((document) {
       if (idPedido == document.id) {
-        pedidoVenda = PedidoVenda.buscarFirebase(document);
+        _pedidoVenda = PedidoVenda.buscarFirebase(document);
       }
     });
+    terminou();
   }
 }

@@ -30,6 +30,7 @@ class _TelaPedidosCompraState extends State<TelaPedidosCompra> {
     return ScopedModelDescendant<UsuarioController>(
         builder: (context, child, model) {
       u.setID = model.dadosUsuarioAtual["id"];
+      u.setPrimeiroLogin = model.dadosUsuarioAtual[["primeiroLogin"]];
       u.setNome = model.dadosUsuarioAtual["nome"];
       u.setEmail = model.dadosUsuarioAtual["email"];
       u.setCPF = model.dadosUsuarioAtual["cpf"];

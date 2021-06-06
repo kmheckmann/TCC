@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:tcc_3/acessorios/Cores.dart';
+import 'package:tcc_3/controller/EmpresaController.dart';
 import 'package:tcc_3/controller/PedidoVendaController.dart';
 import 'package:tcc_3/controller/UsuarioController.dart';
 import 'package:tcc_3/model/PedidoVenda.dart';
@@ -16,9 +17,11 @@ class TelaPedidosVenda extends StatefulWidget {
 
 class _TelaPedidosVendaState extends State<TelaPedidosVenda> {
   Usuario u = Usuario();
+  PedidoVendaController _controller = PedidoVendaController();
+  EmpresaController _controllerEmp = EmpresaController();
+  UsuarioController _controllerUser = UsuarioController();
   DateFormat format = DateFormat();
   Cores cores = Cores();
-  UsuarioController _usuarioController = UsuarioController();
 
   @override
   Widget build(BuildContext context) {
@@ -39,16 +42,20 @@ class _TelaPedidosVendaState extends State<TelaPedidosVenda> {
               child: Icon(Icons.add),
               backgroundColor: Theme.of(context).primaryColor,
               onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => TelaCRUDPedidoVenda(vendedor: u)));
-                setState(() {});
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => TelaCRUDPedidoVenda(
+                            vendedor: u,
+                          )),
+                ).then((value) => setState(() {}));
               }),
           body: FutureBuilder<QuerySnapshot>(
               //O sistema ira acessar o documento "pedidos" e buscar todos os pedidos marcados como pedidos de venda
               future: FirebaseFirestore.instance
                   .collection("pedidos")
                   .where("ehPedidoVenda", isEqualTo: true)
-                  .orderBy("pedidoFinalizado", descending: true)
+                  .orderBy("pedidoFinalizado", descending: false)
                   .get(),
               builder: (context, snapshot) {
                 //Como os dados serao buscados do firebase, pode ser que demore para obter
@@ -114,8 +121,8 @@ class _TelaPedidosVendaState extends State<TelaPedidosVenda> {
                   ),
                   Text(
                     p.getPedidoFinalizado
-                        ? "Finalizado: Sim"
-                        : "Finalizado: Não",
+                        ? "Pedido Finalizado"
+                        : "Pedido em aberto",
                     style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w500,
@@ -128,14 +135,20 @@ class _TelaPedidosVendaState extends State<TelaPedidosVenda> {
         ),
       ),
       onTap: () async {
-        PedidoVendaController _controller = PedidoVendaController();
-        /*await _controller.obterEmpresadoPedido(p.getID);
-        p.setEmpresa = _controller.empresa;
+        await _controller.obterIDEmpresaPedido(p.getID);
+        await _controllerEmp
+            .obterEmpresa(id: _controller.getIDEmpresa)
+            .whenComplete(() => p.setEmpresa = _controllerEmp.getEmpresa);
         await _controller.obterUsuariodoPedido(p.getID);
-        p.setUser = _controller.usuario;*/
-        Navigator.of(contexto).push(MaterialPageRoute(
-            builder: (contexto) => TelaCRUDPedidoVenda(
-                pedidoVenda: p, snapshot: snapshot, vendedor: u)));
+        await _controllerUser
+            .obterUsuarioPorID(id: _controller.getIDUser)
+            .whenComplete(() => p.setUser = _controllerUser.userConsultado);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => TelaCRUDPedidoVenda(
+                  pedidoVenda: p, snapshot: snapshot, vendedor: p.getUser)),
+        ).then((value) => setState(() {}));
       },
     );
   }

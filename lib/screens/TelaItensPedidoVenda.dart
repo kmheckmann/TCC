@@ -106,9 +106,9 @@ class _TelaItensPedidovendaState extends State<TelaItensPedidovenda> {
         onDismissed: (direction) {
           itemRemovido = p;
           _controllerPedido.subtrairPrecoVlTotal(pedido, itemRemovido);
-          pedido.setValorTotal = _controllerPedido.pedidoVenda.getValorTotal;
+          pedido.setValorTotal = _controllerPedido.getPedidoVenda.getValorTotal;
           pedido.setValorDesconto =
-              _controllerPedido.pedidoVenda.getValorDesconto;
+              _controllerPedido.getPedidoVenda.getValorDesconto;
           _controller.removerItem(p, snapshot.documentID, pedido.getID,
               _controllerPedido.converterParaMapa(pedido));
         },

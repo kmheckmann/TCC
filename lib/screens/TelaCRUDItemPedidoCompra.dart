@@ -186,9 +186,11 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
                 children: <Widget>[
                   Container(
                     width: 336.0,
-                    child: DropdownButton(
+                    child: DropdownButtonFormField(
                       value: _dropdownValueProduto,
-                      hint: Text("Selecionar produto"),
+                      decoration: InputDecoration(
+                          labelText: "Produto",
+                          labelStyle: TextStyle(color: cor.corLabel())),
                       onChanged: (String newValue) async {
                         await _controllerProduto.obterProdutoPorID(
                             terminou: whenCompleteObterProduto, id: newValue);
@@ -197,7 +199,7 @@ class _TelaCRUDItemPedidoCompraState extends State<TelaCRUDItemPedidoCompra> {
                             .obterCategoria(
                                 _controllerProduto.getIdCategoriaProduto)
                             .whenComplete(() => produto.setCategoria =
-                                _catController.getCategoria);
+                                _catController.getCategoria);        
                         setState(() {
                           _dropdownValueProduto = newValue;
                           _controllerProdCat.text =

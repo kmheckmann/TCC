@@ -111,8 +111,9 @@ class EstoqueProdutoController {
     });
   }
 
-//Método usado na consulta de estoque
+  //Método usado na consulta de estoque
   Future obterEstoqueProduto({Produto p, VoidCallback terminou}) async {
+    List<EstoqueProduto> estoquesTemp = [];
     _qtdeExistente = 0;
     //Obtém todos os estoque disponiveis
     CollectionReference ref = FirebaseFirestore.instance
@@ -126,23 +127,25 @@ class EstoqueProdutoController {
     _obterEstoque.docs.forEach((document) {
       EstoqueProduto e = EstoqueProduto();
       e = EstoqueProduto.buscarFirebase(document);
-      _estoques.add(e);
+      estoquesTemp.add(e);
     });
+
+    _estoques = estoquesTemp;
 
     if (terminou != null) {
       terminou();
     }
   }
 
-  int retornarQtdeExistente(Produto p) {
-    int qtde = 0;
+  Future retornarQtdeExistente(Produto p, VoidCallback terminou) {
     obterEstoqueProduto(p: p);
     _estoques.forEach((p) {
       if (_estoques.length > 0) {
-        qtde += p.quantidade;
+        _qtdeExistente += p.quantidade;
       }
     });
-    return qtde;
+
+    terminou();
   }
 
   //Esse método será usado no pedido de venda
@@ -161,7 +164,7 @@ class EstoqueProdutoController {
       _qtdeExistente += estoqueProduto.quantidade;
     });
 
-//Se a quantidade existente de estoque for maior ou igual a desejada, atribui true na variavel
+    //Se a quantidade existente de estoque for maior ou igual a desejada, atribui true na variavel
     if (_qtdeExistente >= quantidadeDesejada) _produtoTemEstoque = true;
   }
 
@@ -210,13 +213,13 @@ class EstoqueProdutoController {
   Future<Null> verificarEstoqueTodosItensPedido(PedidoVenda pedido) async {
     //Metodo criado para verificar se todos os itens do pedido possuem estoque
     //se sim, sera possível finalizar o pedido, caso contrário não será permitido
-    CollectionReference ref = Firestore.instance
+    CollectionReference ref = FirebaseFirestore.instance
         .collection("pedidos")
-        .document(pedido.getID)
+        .doc(pedido.getID)
         .collection("itens");
 
-    QuerySnapshot _obterItens = await ref.getDocuments();
-    _obterItens.documents.forEach((item) async {
+    QuerySnapshot _obterItens = await ref.get();
+    _obterItens.docs.forEach((item) async {
       Produto prod = Produto();
       int qtdeDesejada;
       _controllerProduto
@@ -257,7 +260,7 @@ class EstoqueProdutoController {
   }
 
 //O metodo ira aplicar no maior preco de compra do item o percentual de lucro definido no cadastro do produto
-  Future<Null> obterPrecoVenda(Produto p) async {
+  Future obterPrecoVenda(Produto p, VoidCallback terminou) async {
     double preco = 0;
     double maiorPrecoCompra = 0;
 
@@ -272,5 +275,7 @@ class EstoqueProdutoController {
 
     _precoVenda =
         ((p.getPercentLucro / 100) * maiorPrecoCompra) + maiorPrecoCompra;
+
+    terminou();
   }
 }
