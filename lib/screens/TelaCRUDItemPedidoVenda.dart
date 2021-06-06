@@ -119,12 +119,12 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
             padding: EdgeInsets.all(8.0),
             children: <Widget>[
               _campoProduto(),
-              campos.campoTextoDesabilitado(
-                  _controllerProdCat, "Categoria do produto", false),
               _criarCampoTexto(_controllerPreco, "Preço",
                   TextInputType.numberWithOptions(decimal: true), maskPreco),
               _criarCampoTexto(_controllerQtde, "Quantidade",
                   TextInputType.number, maskQtde),
+              campos.campoTextoDesabilitado(
+                  _controllerProdCat, "Categoria do produto", false),
               campos.campoTextoDesabilitado(
                   _controllerProdQtdeExistente, "Qtde Existente", false)
             ],
