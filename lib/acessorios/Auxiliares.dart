@@ -13,6 +13,28 @@ class Auxiliares {
     ));
   }
 
+  Widget alerta(String texto1, String texto2, BuildContext context) {
+    return AlertDialog(
+      title: Text(texto1),
+      titleTextStyle: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22.0),
+      content: SingleChildScrollView(
+        child: ListBody(
+          children: <Widget>[
+            Text(texto2),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          child: Text('OK'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        )
+      ],
+    );
+  }
+
   String formatarData(DateTime data) {
     return (data.day.toString() +
         "/" +

@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:tcc_3/controller/CategoriaController.dart';
+import 'package:tcc_3/controller/EstoqueProdutoController.dart';
 import 'package:tcc_3/controller/ItemPedidoVendaController.dart';
 import 'package:tcc_3/controller/PedidoVendaController.dart';
+import 'package:tcc_3/controller/ProdutoController.dart';
 import 'package:tcc_3/model/ItemPedido.dart';
 import 'package:tcc_3/model/ItemPedidoVenda.dart';
 import 'package:tcc_3/model/PedidoVenda.dart';
@@ -21,11 +24,15 @@ class TelaItensPedidovenda extends StatefulWidget {
 
 class _TelaItensPedidovendaState extends State<TelaItensPedidovenda> {
   final DocumentSnapshot snapshot;
+  int qtdeTotalItem = 0;
   ItemPedido itemPedido;
   PedidoVenda pedidoVenda;
   ItemPedido itemRemovido;
   ItemPedidoVendaController _controller = ItemPedidoVendaController();
+  EstoqueProdutoController _controllerEstoque = EstoqueProdutoController();
   PedidoVendaController _controllerPedido = PedidoVendaController();
+  ProdutoController _controllerproduto = ProdutoController();
+  CategoriaController _controllerCategoria = CategoriaController();
 
   _TelaItensPedidovendaState(this.snapshot, this.pedidoVenda, this.itemPedido);
 
@@ -44,10 +51,13 @@ class _TelaItensPedidovendaState extends State<TelaItensPedidovenda> {
               child: Icon(Icons.add),
               backgroundColor: Theme.of(context).primaryColor,
               onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => TelaCRUDItemPedidoVenda(
-                          pedidoVenda: pedidoVenda,
-                        )));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => TelaCRUDItemPedidoVenda(
+                            pedidoVenda: pedidoVenda,
+                          )),
+                ).then((value) => setState(() {}));
               })),
       body: FutureBuilder<QuerySnapshot>(
           //O sistema ira acessar o documento "pedidos" e depois a coleção de itens dos pedidos
@@ -109,7 +119,7 @@ class _TelaItensPedidovendaState extends State<TelaItensPedidovenda> {
           pedido.setValorTotal = _controllerPedido.getPedidoVenda.getValorTotal;
           pedido.setValorDesconto =
               _controllerPedido.getPedidoVenda.getValorDesconto;
-          _controller.removerItem(p, snapshot.documentID, pedido.getID,
+          _controller.removerItem(p, snapshot.id, pedido.getID,
               _controllerPedido.converterParaMapa(pedido));
         },
       );
@@ -139,12 +149,17 @@ class _TelaItensPedidovendaState extends State<TelaItensPedidovenda> {
                         fontSize: 20.0),
                   ),
                   Text(
-                    "Preço: ${snapshot.data()["preco"]}",
+                    "Qtde: ${snapshot.data()["quantidade"]}",
                     style:
                         TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
                   ),
                   Text(
-                    "Qtde: ${snapshot.data()["quantidade"]}",
+                    "Preço unitário: ${snapshot.data()["preco"]}",
+                    style:
+                        TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
+                  ),
+                  Text(
+                    "Preço total: ${snapshot.data()["preco"] * snapshot.data()["quantidade"]}",
                     style:
                         TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
                   ),
@@ -155,15 +170,32 @@ class _TelaItensPedidovendaState extends State<TelaItensPedidovenda> {
         ),
       ),
       onTap: () async {
-        await _controller.obterProduto(pedidoVenda.getID);
-        p.produto = _controller.getProduto;
-        Navigator.of(contexto).push(MaterialPageRoute(
-            builder: (contexto) => TelaCRUDItemPedidoVenda(
-                  pedidoVenda: pedido,
-                  itemPedido: p,
-                  snapshot: snapshot,
-                )));
+        await _controllerproduto
+            .obterProdutoPorID(id: snapshot.data()["id"])
+            .whenComplete(() => p.produto = _controllerproduto.produto);
+        await _controllerproduto.obterCategoria(snapshot.data()["id"]);
+       _controllerEstoque
+            .retornarQtdeExistente(id: snapshot.data()["id"], terminou: whenCompleteObterQtdeExistente);
+        await _controllerCategoria
+            .obterCategoria(_controllerproduto.getIdCategoriaProduto)
+            .whenComplete(() =>
+                p.produto.setCategoria = _controllerCategoria.getCategoria);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => TelaCRUDItemPedidoVenda(
+                    pedidoVenda: pedido,
+                    itemPedido: p,
+                    snapshot: snapshot,
+                    qtdeExistente: qtdeTotalItem,
+                  )),
+        ).then((value) => setState(() {}));
       },
     );
+  }
+
+  void whenCompleteObterQtdeExistente() {
+    qtdeTotalItem =
+        _controllerEstoque.getQtdeExistente;
   }
 }

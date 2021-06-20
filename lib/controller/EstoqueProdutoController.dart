@@ -112,13 +112,13 @@ class EstoqueProdutoController {
   }
 
   //Método usado na consulta de estoque
-  Future obterEstoqueProduto({Produto p, VoidCallback terminou}) async {
+  Future obterEstoqueProduto({String id, VoidCallback terminou}) async {
     List<EstoqueProduto> estoquesTemp = [];
     _qtdeExistente = 0;
     //Obtém todos os estoque disponiveis
     CollectionReference ref = FirebaseFirestore.instance
         .collection("produtos")
-        .doc(p.getID)
+        .doc(id)
         .collection("estoque");
     QuerySnapshot _obterEstoque =
         await ref.where("quantidade", isGreaterThan: 0).get();
@@ -137,15 +137,17 @@ class EstoqueProdutoController {
     }
   }
 
-  Future retornarQtdeExistente(Produto p, VoidCallback terminou) {
-    obterEstoqueProduto(p: p);
+  Future retornarQtdeExistente({String id, VoidCallback terminou}) {
+    obterEstoqueProduto(id: id);
     _estoques.forEach((p) {
       if (_estoques.length > 0) {
         _qtdeExistente += p.quantidade;
       }
     });
 
-    terminou();
+    if (terminou != null) {
+      terminou();
+    }
   }
 
   //Esse método será usado no pedido de venda
@@ -153,11 +155,11 @@ class EstoqueProdutoController {
   //Mas permiirá salvar o item
   //Ao tentar finalizar um pedido onde um dos itens não possui em estoque a quantidade desejada a operação será abortada
   Future<Null> verificarSeProdutoTemEstoqueDisponivel(
-      Produto p, int quantidadeDesejada) async {
+      String id, int quantidadeDesejada, VoidCallback terminou) async {
     //Contador para a quantidade de todos os lotes do item
     _qtdeExistente = 0;
     //Chama o método abaixo para obter todo o estoque do item
-    obterEstoqueProduto(p: p);
+    obterEstoqueProduto(id: id);
 
     //para cada registro existente, adicionada no contador a quantidade total do lote do estoque
     _estoques.forEach((estoqueProduto) {
@@ -166,6 +168,7 @@ class EstoqueProdutoController {
 
     //Se a quantidade existente de estoque for maior ou igual a desejada, atribui true na variavel
     if (_qtdeExistente >= quantidadeDesejada) _produtoTemEstoque = true;
+    terminou();
   }
 
 //Esse método será utilizado no pedido de venda após constatar que existe estoque suficiente disponivel do produto desejado
@@ -187,7 +190,7 @@ class EstoqueProdutoController {
       int qtdeDesejada = item.data()["quantidade"];
 
       //Obtem todo o estoque do produto
-      await obterEstoqueProduto(p: prod);
+      await obterEstoqueProduto(id: prod.getID);
       //Enquanto a quantidade desejada nao estiver zerada será realizado a ação abaixo
       do {
         //Se o lote verificado possuir quantidade maior do que a qtde desejada
@@ -237,7 +240,7 @@ class EstoqueProdutoController {
 
       _qtdeExistente = 0;
       //Chama o método abaixo para obter todo o estoque do item
-      await obterEstoqueProduto(p: prod).whenComplete(() {
+      await obterEstoqueProduto(id: prod.getID).whenComplete(() {
         print("aqui 2");
         print(_estoques.length);
         print(_qtdeExistente);
@@ -264,7 +267,7 @@ class EstoqueProdutoController {
     double preco = 0;
     double maiorPrecoCompra = 0;
 
-    await obterEstoqueProduto(p: p);
+    await obterEstoqueProduto(id: p.getID);
 
     _estoques.forEach((item) {
       preco = item.precoCompra;

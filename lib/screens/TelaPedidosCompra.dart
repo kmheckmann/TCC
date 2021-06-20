@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:tcc_3/acessorios/Auxiliares.dart';
 import 'package:tcc_3/acessorios/Cores.dart';
 import 'package:tcc_3/controller/EmpresaController.dart';
 import 'package:tcc_3/controller/PedidoCompraController.dart';
@@ -24,6 +25,7 @@ class _TelaPedidosCompraState extends State<TelaPedidosCompra> {
   PedidoCompraController _controller = PedidoCompraController();
   EmpresaController _controllerEmp = EmpresaController();
   UsuarioController _controllerUser = UsuarioController();
+  Auxiliares _aux = Auxiliares();
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +117,7 @@ class _TelaPedidosCompraState extends State<TelaPedidosCompra> {
                         color: cores.corSecundaria(!p.getPedidoFinalizado)),
                   ),
                   Text(
-                    "Data: ${p.getDataPedido.day}/${p.getDataPedido.month}/${p.getDataPedido.year} ${new DateFormat.Hms().format(p.getDataPedido)}",
+                    "Data: ${_aux.formatarData(p.getDataPedido)}",
                     style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w500,

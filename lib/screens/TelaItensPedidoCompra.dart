@@ -149,19 +149,27 @@ class _TelaItensPedidoCompraState extends State<TelaItensPedidoCompra> {
                         fontSize: 20.0),
                   ),
                   Text(
-                    "Preço: ${snapshot.data()["preco"]}",
-                    style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w500,
-                        color: cor.corSecundaria(!pedido.getPedidoFinalizado)),
-                  ),
-                  Text(
                     "Qtde: ${snapshot.data()["quantidade"]}",
                     style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w500,
                         color: cor.corSecundaria(!pedido.getPedidoFinalizado)),
                   ),
+                  Text(
+                    "Preço unitário: ${snapshot.data()["preco"]}",
+                    style: TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w500,
+                        color: cor.corSecundaria(!pedido.getPedidoFinalizado)),
+                  ),
+                  Text(
+                    "Preço total: ${snapshot.data()["preco"] * snapshot.data()["quantidade"]}",
+                    style: TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w500,
+                        color: cor.corSecundaria(!pedido.getPedidoFinalizado)),
+                  ),
+                  
                 ],
               ),
             ))

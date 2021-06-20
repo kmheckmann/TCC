@@ -20,15 +20,18 @@ class TelaCRUDItemPedidoVenda extends StatefulWidget {
   final PedidoVenda pedidoVenda;
   final ItemPedido itemPedido;
   final DocumentSnapshot snapshot;
+  final int qtdeExistente;
 
-  TelaCRUDItemPedidoVenda({this.pedidoVenda, this.itemPedido, this.snapshot});
+  TelaCRUDItemPedidoVenda(
+      {this.pedidoVenda, this.itemPedido, this.snapshot, this.qtdeExistente});
   @override
   _TelaCRUDItemPedidoVendaState createState() => _TelaCRUDItemPedidoVendaState(
-      snapshot: snapshot, pedidoVenda: pedidoVenda, itemPedido: itemPedido);
+      snapshot: snapshot, pedidoVenda: pedidoVenda, itemPedido: itemPedido, qtdeExistente: qtdeExistente);
 }
 
 class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
   final DocumentSnapshot snapshot;
+  final int qtdeExistente;
   PedidoVenda pedidoVenda;
   ItemPedidoVenda itemPedido;
   Auxiliares aux = Auxiliares();
@@ -42,7 +45,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
       FilteringTextInputFormatter.deny(new RegExp('[\\-|\\ |\\,|\\.]'));
 
   _TelaCRUDItemPedidoVendaState(
-      {this.snapshot, this.pedidoVenda, this.itemPedido});
+      {this.snapshot, this.pedidoVenda, this.itemPedido, this.qtdeExistente});
 
   String _dropdownValueProduto;
   double vlItemAntigo;
@@ -70,7 +73,6 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
   void initState() {
     super.initState();
     if (itemPedido != null) {
-      _controllerEstoque.obterEstoqueProduto(p: produto);
       _nomeTela = "Editar Produto";
       vlItemAntigo = itemPedido.preco;
       _dropdownValueProduto =
@@ -78,8 +80,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
       _controllerPreco.text = itemPedido.preco.toString();
       _controllerQtde.text = itemPedido.quantidade.toString();
       _controllerProdCat.text = itemPedido.produto.getCategoria.getDescricao;
-      _controllerProdQtdeExistente.text =
-          _controllerEstoque.getQtdeExistente.toString();
+      _controllerProdQtdeExistente.text = this.qtdeExistente.toString();
       _novocadastro = false;
     } else {
       _nomeTela = "Novo Produto";
@@ -104,7 +105,19 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
               onPressed: () async {
                 if (_validadorCampos.currentState.validate()) {
                   if (_dropdownValueProduto != null) {
-                    _codigoPersistir();
+                    if (int.parse(_controllerQtde.text) <=
+                        int.parse(_controllerProdQtdeExistente.text)) {
+                      _codigoPersistir();
+                    } else {
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return aux.alerta(
+                                "Produto sem estoque!",
+                                "A quantidade desejada é maior que a quantidade em estoque do produto, verifique!",
+                                context);
+                          });
+                    }
                   } else {
                     aux.exibirBarraMensagem(
                         "É necessário selecionar um produto!",
@@ -170,7 +183,7 @@ class _TelaCRUDItemPedidoVendaState extends State<TelaCRUDItemPedidoVenda> {
                         await _controllerEstoque.obterPrecoVenda(
                             produto, whenCompleteObterPrecoVenda);
                         _controllerEstoque.retornarQtdeExistente(
-                            produto, whenCompleteObterQtdeExistente);
+                            id: produto.getID, terminou:  whenCompleteObterQtdeExistente);
                         setState(() {
                           _dropdownValueProduto = newValue;
                           _controllerProdCat.text =

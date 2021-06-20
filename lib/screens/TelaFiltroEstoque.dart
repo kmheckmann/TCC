@@ -55,7 +55,7 @@ class _TelaFiltroEstoqueState extends State<TelaFiltroEstoque> {
               //Apos obter as infos do produto
               //Obtem o estoque  
               await _controllerEstoque.obterEstoqueProduto(
-                  p: p, terminou: whenCompleteObterEstoqueprod);
+                  id: p.getID, terminou: whenCompleteObterEstoqueprod);
 
               //Direciona o user para a tela de listagem de estoque 
               //Com a lista contendo os lotes de estoque
