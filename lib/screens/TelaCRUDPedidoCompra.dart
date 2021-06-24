@@ -52,6 +52,7 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
   String _dropdownValueFornecedor;
   String _nomeTela;
   bool _novocadastro;
+  bool _temItens;
 
   Campos campos = Campos();
   Cores cores = Cores();
@@ -128,7 +129,7 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
               //faz a verificacao necessaria para permitir ou nao finalizar o pedido
               if (pedidoCompra.getPedidoFinalizado == true &&
                   pedidoCompra.getDataFinal == null) {
-                await _controllerPedido.verificarSePedidoTemItens(pedidoCompra);
+                await _controllerPedido.verificarSePedidoTemItens(pedidoCompra, whenCompleteVerificaSePedidoTemItens);
 
                 //Verifica o valor da variavel para identificar se pode ou nao finalizar o pedido
                 if (_controllerPedido.getPodeFinalizar == true) {
@@ -406,5 +407,9 @@ class _TelaCRUDPedidoCompraState extends State<TelaCRUDPedidoCompra> {
     _controllerPercentDesc.text = pedidoCompra.getPercentDesconto.toString();
     _controllerFornecedor.text = _dropdownValueFornecedor;
     _controllerFormaPgto.text = pedidoCompra.getTipoPgto;
+  }
+
+  void whenCompleteVerificaSePedidoTemItens() {
+    _temItens = _controllerPedido.getPodeFinalizar;
   }
 }

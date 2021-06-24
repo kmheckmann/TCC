@@ -22,7 +22,7 @@ class _TelaInicialState extends State<TelaInicial> {
     return Scaffold(
         key: _scaffold,
         appBar: AppBar(
-          title: Text("Vale Distribuidora"),
+          title: Text("Easy Management"),
           centerTitle: true,
         ),
         //ScopedModelDescendant eh para essa classe conseguir ter acesso e ser influenciada pelo

@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
     return ScopedModel<UsuarioController>(
       model: UsuarioController(),
       child: MaterialApp(
-        title: 'TCC',
+        title: 'Easy Management',
         theme: ThemeData(
             primarySwatch: Colors.blue,
             primaryColor: Color.fromARGB(255, 0, 120, 189)

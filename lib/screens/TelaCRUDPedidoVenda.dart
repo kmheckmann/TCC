@@ -14,6 +14,7 @@ import 'package:tcc_3/model/Produto.dart';
 import 'package:tcc_3/model/Usuario.dart';
 import 'package:tcc_3/screens/TelaItensPedidoVenda.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:tcc_3/screens/TelaPedidosVenda.dart';
 
 class TelaCRUDPedidoVenda extends StatefulWidget {
   final PedidoVenda pedidoVenda;
@@ -50,7 +51,7 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
   final _controllerCliente = TextEditingController();
   final _controllerTipoPedido = TextEditingController();
   bool _novocadastro;
-  bool _vlCheckBox;
+  bool _temItens;
   String _nomeTela;
   Empresa empresa = Empresa();
   PedidoVendaController _controllerPedido = PedidoVendaController();
@@ -79,7 +80,6 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
           pedidoVenda.getEmpresa.getRazaoSocial;
       _controllerVlTotalDesc.text = pedidoVenda.getValorDesconto.toString();
       _novocadastro = false;
-      _vlCheckBox = pedidoVenda.getPedidoFinalizado;
       _controllerData.text = aux.formatarData(pedidoVenda.getDataPedido);
       if (pedidoVenda.getDataFinal != null)
         _controllerDataFinal.text = aux.formatarData(pedidoVenda.getDataFinal);
@@ -94,7 +94,6 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
       //formatar data
       _controllerData.text = aux.formatarData(pedidoVenda.getDataPedido);
       _novocadastro = true;
-      _vlCheckBox = false;
       pedidoVenda.setPedidoFinalizado = false;
       _controllerVendedor.text = vendedor.getNome;
       _controllerVlTotalDesc.text = pedidoVenda.getValorDesconto.toString();
@@ -129,46 +128,72 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
                   id: _dropdownValueFornecedor, terminou: whenCompleteEmpresa);
             }
 
-            //A variavel pedidoFinalizado é atualizado conforme o checkbox Finalizado é alterado
-            //Se essa variavel estiver como true e a data final do pedido esta nula
-            //faz a verificacao necessaria para permitir ou nao finalizar o pedido
-            if (pedidoVenda.getPedidoFinalizado == true &&
-                pedidoVenda.getDataFinal == null) {
-              await _controllerPedido.verificarSePedidoTemItens(pedidoVenda);
+            if (_dropdownValueTipoPgto != null &&
+                _dropdownValueFornecedor != null &&
+                _dropdownValueTipoPedido != null) {
+              //A variavel pedidoFinalizado é atualizado conforme o checkbox Finalizado é alterado
+              //Se essa variavel estiver como true e a data final do pedido esta nula
+              //faz a verificacao necessaria para permitir ou nao finalizar o pedido
+              if (pedidoVenda.getPedidoFinalizado == true &&
+                  pedidoVenda.getDataFinal == null) {
+                await _controllerPedido.verificarSePedidoTemItens(
+                    pedidoVenda, whenCompleteVerificaSePedidoTemItens);
 
-              if (_controllerPedido.getPodeFinalizar == true) {
-                await _controllerEstoque
-                    .verificarEstoqueTodosItensPedido(pedidoVenda);
-                if (_controllerEstoque.getPermitirFinalizarPedidoVenda ==
-                    true) {
-                  _controllerEstoque.descontarEstoqueProduto(pedidoVenda);
-                  pedidoVenda.setDataFinal = DateTime.now();
-                  _controllerDataFinal.text =
-                      aux.formatarData(pedidoVenda.getDataFinal);
-                  _codigoBotaoSalvar();
+                if (_temItens == true) {
+                  await _controllerEstoque
+                      .verificarEstoqueTodosItensPedido(pedidoVenda);
+                  if (_controllerEstoque.getPermitirFinalizarPedidoVenda ==
+                      true) {
+                    _controllerEstoque.descontarEstoqueProduto(pedidoVenda);
+                    pedidoVenda.setDataFinal = DateTime.now();
+                    _controllerDataFinal.text =
+                        aux.formatarData(pedidoVenda.getDataFinal);
+                    _codigoBotaoSalvar();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => TelaPedidosVenda()),
+                    ).then((value) => setState(() {}));
+                  } else {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return aux.alerta(
+                              "Itens sem estoque",
+                              "O pedido possui itens sem estoque suficiente para atender a quantidade solicitada",
+                              context);
+                        });
+                  }
                 } else {
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return _alertaEstoque();
-                      });
+                  //Se não puder finalizar a variavel PedidoFinalizado volta a ser false
+                  pedidoVenda.setPedidoFinalizado = false;
+                  //o setState é para atualizar a tela de novo
+                  //e fazer com que os campos sejam editaveis novamente
+                  setState(() {});
+                  //uma mensagem é exibida e as alterações não são persistidas
+                  aux.exibirBarraMensagem(
+                      "O pedido não pode ser finalizado pois não contém itens!",
+                      Colors.red,
+                      _scaffold);
                 }
               } else {
-                //Se não puder finalizar a variavel PedidoFinalizado volta a ser false
-                pedidoVenda.setPedidoFinalizado = false;
-                //o setState é para atualizar a tela de novo
-                //e fazer com que os campos sejam editaveis novamente
-                setState(() {});
-                //uma mensagem é exibida e as alterações não são persistidas
-                aux.exibirBarraMensagem(
-                    "O pedido não pode ser finalizado pois não contém itens!",
-                    Colors.red,
-                    _scaffold);
+                //Se não foi marcado o finalizar pedido
+                //só persiste as alterações
+                _codigoBotaoSalvar();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => TelaItensPedidovenda(
+                            pedidoVenda: pedidoVenda,
+                            snapshot: snapshot,
+                          )),
+                ).then((value) => setState(() {}));
               }
             } else {
-              //Se não foi marcado o finalizar pedido
-              //só persiste as alterações
-              _codigoBotaoSalvar();
+              aux.exibirBarraMensagem(
+                  "Todos os campos da tela devem ser informados!",
+                  Colors.red,
+                  _scaffold);
             }
           }),
       body: SingleChildScrollView(
@@ -323,15 +348,15 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
       child: Row(
         children: <Widget>[
           Checkbox(
-            value: _vlCheckBox == true,
+            value: pedidoVenda.getPedidoFinalizado == true,
             onChanged: pedidoVenda.getPedidoFinalizado
                 ? null
                 : (bool novoValor) {
                     setState(() {
                       if (novoValor) {
-                        _vlCheckBox = true;
+                        pedidoVenda.setPedidoFinalizado = true;
                       } else {
-                        _vlCheckBox = false;
+                        pedidoVenda.setPedidoFinalizado = false;
                       }
                     });
                   },
@@ -347,72 +372,27 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
     );
   }
 
-  void _validacoes() async {
-    pedidoVenda.setPedidoFinalizado = _vlCheckBox;
-    if (pedidoVenda.getPedidoFinalizado == true &&
-        pedidoVenda.getDataFinal == null) {
-      await _controllerPedido.verificarSePedidoTemItens(pedidoVenda);
-
-      if (_controllerPedido.getPodeFinalizar == true) {
-        await _controllerEstoque.verificarEstoqueTodosItensPedido(pedidoVenda);
-        if (_controllerEstoque.getPermitirFinalizarPedidoVenda == true) {
-          _controllerEstoque.descontarEstoqueProduto(pedidoVenda);
-          pedidoVenda.setDataFinal = DateTime.now();
-          _controllerDataFinal.text =
-              aux.formatarData(pedidoVenda.getDataFinal);
-          _codigoBotaoSalvar();
-        } else {
-          showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return _alertaEstoque();
-              });
-        }
-      } else {
-        aux.exibirBarraMensagem(
-            "O pedido não pode ser finalizado pois não contém itens!",
-            Colors.red,
-            _scaffold);
-      }
-    } else {
-      _codigoBotaoSalvar();
-    }
-  }
-
   void _codigoBotaoSalvar() async {
     empresa = _controllerEmpresa.getEmpresa;
     // método criado para não precisar repetir duas vezes o mesmo codigo na hora que clica no salvar
-    if (_dropdownValueTipoPgto != null &&
-        _dropdownValueFornecedor != null &&
-        _dropdownValueTipoPedido != null) {
-      Map<String, dynamic> mapa =
-          _controllerPedido.converterParaMapaPedidoVenda(pedidoVenda);
-      Map<String, dynamic> mapaVendedor = Map();
-      mapaVendedor["id"] = vendedor.getID;
-      Map<String, dynamic> mapaEmpresa = Map();
-      mapaEmpresa["id"] = empresa.getId;
-      pedidoVenda.setPedidoFinalizado = _vlCheckBox;
+    Map<String, dynamic> mapa =
+        _controllerPedido.converterParaMapaPedidoVenda(pedidoVenda);
+    Map<String, dynamic> mapaVendedor = Map();
+    mapaVendedor["id"] = vendedor.getID;
+    Map<String, dynamic> mapaEmpresa = Map();
+    mapaEmpresa["id"] = empresa.getId;
 
-      if (_novocadastro) {
-        _novocadastro = false;
-        await _controllerObterProxID
-            .obterProxID(FirebaseFirestore.instance.collection("pedidos"));
-        pedidoVenda.setID = _controllerObterProxID.proxID;
-        _controllerPedido.persistirAlteracoesPedido(
-            mapa, mapaEmpresa, mapaVendedor, pedidoVenda.getID);
-        _controllerIdPedido.text = pedidoVenda.getID;
-      } else {
-        _controllerPedido.persistirAlteracoesPedido(
-            mapa, mapaEmpresa, mapaVendedor, pedidoVenda.getID);
-      }
-      Navigator.of(context).push(MaterialPageRoute(
-          builder: (contexto) => TelaItensPedidovenda(
-                pedidoVenda: pedidoVenda,
-                snapshot: snapshot,
-              )));
+    if (_novocadastro) {
+      _novocadastro = false;
+      await _controllerObterProxID
+          .obterProxID(FirebaseFirestore.instance.collection("pedidos"));
+      pedidoVenda.setID = _controllerObterProxID.proxID;
+      _controllerPedido.persistirAlteracoesPedido(
+          mapa, mapaEmpresa, mapaVendedor, pedidoVenda.getID);
+      _controllerIdPedido.text = pedidoVenda.getID;
     } else {
-      aux.exibirBarraMensagem("Todos os campos da tela devem ser informados!",
-          Colors.red, _scaffold);
+      _controllerPedido.persistirAlteracoesPedido(
+          mapa, mapaEmpresa, mapaVendedor, pedidoVenda.getID);
     }
   }
 
@@ -486,29 +466,6 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
     }
   }
 
-  Widget _alertaEstoque() {
-    return AlertDialog(
-      title: Text('Produtos sem estoque suficiente'),
-      titleTextStyle: TextStyle(fontWeight: FontWeight.bold),
-      content: SingleChildScrollView(
-        child: ListBody(
-          children: <Widget>[
-            Text(
-                'O pedido possui itens sem estoque suficiente para atender a quantidade solicitada'),
-          ],
-        ),
-      ),
-      actions: <Widget>[
-        FlatButton(
-          child: Text('OK'),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        )
-      ],
-    );
-  }
-
   void terminouAtualizarCapaPedido() {
     _controllerVlTotal.text = pedidoVenda.getValorTotal.toString();
     _controllerVlTotalDesc.text = pedidoVenda.getValorDesconto.toString();
@@ -522,5 +479,9 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
   void whenCompleteEmpresa() {
     empresa = _controllerEmpresa.getEmpresa;
     pedidoVenda.setLabel = empresa.getRazaoSocial;
+  }
+
+  void whenCompleteVerificaSePedidoTemItens() {
+    _temItens = _controllerPedido.getPodeFinalizar;
   }
 }

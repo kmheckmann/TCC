@@ -138,16 +138,20 @@ class EstoqueProdutoController {
   }
 
   Future retornarQtdeExistente({String id, VoidCallback terminou}) {
-    obterEstoqueProduto(id: id);
-    _estoques.forEach((p) {
-      if (_estoques.length > 0) {
-        _qtdeExistente += p.quantidade;
+    //obtem o estoque do produto
+    obterEstoqueProduto(id: id).whenComplete(() {
+      //percorre a lista de estoque
+      _estoques.forEach((p) {
+        if (_estoques.length > 0) {
+          //soma na quantidade existente a quantidade que está sendo observada na lista
+          _qtdeExistente += p.quantidade;
+        }
+      });
+      //Se for passado um VoidCallBack por parametro, executa o voidcallback
+      if (terminou != null) {
+        terminou();
       }
     });
-
-    if (terminou != null) {
-      terminou();
-    }
   }
 
   //Esse método será usado no pedido de venda

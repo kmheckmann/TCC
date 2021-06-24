@@ -163,7 +163,7 @@ class _TelaItensPedidoCompraState extends State<TelaItensPedidoCompra> {
                         color: cor.corSecundaria(!pedido.getPedidoFinalizado)),
                   ),
                   Text(
-                    "Preço total: ${snapshot.data()["preco"] * snapshot.data()["quantidade"]}",
+                    "Preço total: ${(snapshot.data()["preco"] * snapshot.data()["quantidade"]).toStringAsFixed(2)}",
                     style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w500,

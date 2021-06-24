@@ -16,7 +16,7 @@ class HomeTab extends StatelessWidget {
               elevation: 0.0,
               flexibleSpace: FlexibleSpaceBar(
                 //Const para saber que o texto sempre vai ter o mesmo valor, otimizando o codgio
-                title: const Text("Vale Distribuidora"),
+                title: const Text("Easy Management"),
                 centerTitle: true,
               ),
             ),

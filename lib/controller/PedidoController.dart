@@ -142,7 +142,7 @@ abstract class PedidoController {
   //Método chamado ao utilizar o botão de atualizar na capa do pedido
   Future atualizarCapaPedido(String idPedido, VoidCallback terminou);
 
-  Future verificarSePedidoTemItens(Pedido p) async {
+  Future verificarSePedidoTemItens(Pedido p, VoidCallback terminou) async {
     //este método tem o objetivo de verificar se o pedido possui itens cadastrados
     //para poder finalizar o pedido
 
@@ -159,5 +159,7 @@ abstract class PedidoController {
     } else {
       _podeFinalizar = false;
     }
+
+    terminou();
   }
 }

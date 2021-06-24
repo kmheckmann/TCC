@@ -95,7 +95,7 @@ class _TelaItensPedidovendaState extends State<TelaItensPedidovenda> {
   Widget _construirListaPedidos(
       contexto, ItemPedido p, DocumentSnapshot snapshot, PedidoVenda pedido) {
     if (pedido.getPedidoFinalizado) {
-      return _codigoLista(contexto, p, snapshot, pedido);
+      return _codigoLista(contexto, p, snapshot, pedido, qtdeTotalItem);
     } else {
       return Dismissible(
         //A key é o que widget dismiss usa pra saber qual item está sendo arrastado
@@ -109,7 +109,7 @@ class _TelaItensPedidovendaState extends State<TelaItensPedidovenda> {
           ),
         ),
         direction: DismissDirection.startToEnd,
-        child: _codigoLista(contexto, p, snapshot, pedido),
+        child: _codigoLista(contexto, p, snapshot, pedido, qtdeTotalItem),
         //o atributo inDismissed obriga que seja informado a direcao como parametro
         //no atributo direction rentringi para que o card fosse arrastado somente da esquerda para direita
         //assim a direcao passada sempre sera a mesma, por isso, a direcao nao sera utilizada
@@ -127,7 +127,7 @@ class _TelaItensPedidovendaState extends State<TelaItensPedidovenda> {
   }
 
   Widget _codigoLista(
-      contexto, ItemPedido p, DocumentSnapshot snapshot, PedidoVenda pedido) {
+      contexto, ItemPedido p, DocumentSnapshot snapshot, PedidoVenda pedido, int qtde) {
     return InkWell(
       //InkWell eh pra dar uma animacao quando clicar no produto
       child: Card(
@@ -159,7 +159,7 @@ class _TelaItensPedidovendaState extends State<TelaItensPedidovenda> {
                         TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
                   ),
                   Text(
-                    "Preço total: ${snapshot.data()["preco"] * snapshot.data()["quantidade"]}",
+                    "Preço total: ${(snapshot.data()["preco"] * snapshot.data()["quantidade"]).toStringAsFixed(2)}",
                     style:
                         TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
                   ),
@@ -170,12 +170,12 @@ class _TelaItensPedidovendaState extends State<TelaItensPedidovenda> {
         ),
       ),
       onTap: () async {
+        _controllerEstoque
+            .retornarQtdeExistente(id: snapshot.data()["id"], terminou: whenCompleteObterQtdeExistente);
         await _controllerproduto
             .obterProdutoPorID(id: snapshot.data()["id"])
             .whenComplete(() => p.produto = _controllerproduto.produto);
         await _controllerproduto.obterCategoria(snapshot.data()["id"]);
-       _controllerEstoque
-            .retornarQtdeExistente(id: snapshot.data()["id"], terminou: whenCompleteObterQtdeExistente);
         await _controllerCategoria
             .obterCategoria(_controllerproduto.getIdCategoriaProduto)
             .whenComplete(() =>
@@ -195,7 +195,6 @@ class _TelaItensPedidovendaState extends State<TelaItensPedidovenda> {
   }
 
   void whenCompleteObterQtdeExistente() {
-    qtdeTotalItem =
-        _controllerEstoque.getQtdeExistente;
+    qtdeTotalItem = _controllerEstoque.getQtdeExistente;
   }
 }
