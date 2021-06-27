@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
@@ -14,7 +16,6 @@ import 'package:tcc_3/model/Produto.dart';
 import 'package:tcc_3/model/Usuario.dart';
 import 'package:tcc_3/screens/TelaItensPedidoVenda.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
-import 'package:tcc_3/screens/TelaPedidosVenda.dart';
 
 class TelaCRUDPedidoVenda extends StatefulWidget {
   final PedidoVenda pedidoVenda;
@@ -52,6 +53,7 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
   final _controllerTipoPedido = TextEditingController();
   bool _novocadastro;
   bool _temItens;
+  bool _permiteFinalizar;
   String _nomeTela;
   Empresa empresa = Empresa();
   PedidoVendaController _controllerPedido = PedidoVendaController();
@@ -63,6 +65,7 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
   ObterProxIDController _controllerObterProxID = ObterProxIDController();
   List<Produto> produtos = [];
   final maskDesconto = MaskTextInputFormatter(mask: "##.##");
+  HashMap _itensPedidoEQtdes = new HashMap<String, int>();
 
   @override
   void initState() {
@@ -140,10 +143,11 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
                     pedidoVenda, whenCompleteVerificaSePedidoTemItens);
 
                 if (_temItens == true) {
-                  await _controllerEstoque
-                      .verificarEstoqueTodosItensPedido(pedidoVenda);
-                  if (_controllerEstoque.getPermitirFinalizarPedidoVenda ==
-                      true) {
+                  await _controllerEstoque.obtemItensEQtdesDoPedido(
+                      pedidoVenda.getID, whenCompleteTeste1);
+                  await _controllerEstoque.verificaSeItensPedidoTemEstoque(
+                      _itensPedidoEQtdes, whenCompleteTeste2);
+                  if (_permiteFinalizar) {
                     _controllerEstoque.descontarEstoqueProduto(pedidoVenda);
                     pedidoVenda.setDataFinal = DateTime.now();
                     _controllerDataFinal.text =
@@ -152,9 +156,18 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => TelaPedidosVenda()),
+                          builder: (context) => TelaItensPedidovenda(
+                                pedidoVenda: pedidoVenda,
+                                snapshot: snapshot,
+                              )),
                     ).then((value) => setState(() {}));
                   } else {
+                    //Se não puder finalizar a variavel PedidoFinalizado volta a ser false
+                    pedidoVenda.setPedidoFinalizado = false;
+                    //o setState é para atualizar a tela de novo
+                    //e fazer com que os campos sejam editaveis novamente
+                    setState(() {});
+                    //uma mensagem é exibida e as alterações não são persistidas
                     showDialog(
                         context: context,
                         builder: (BuildContext context) {
@@ -483,5 +496,19 @@ class _TelaCRUDPedidoVendaState extends State<TelaCRUDPedidoVenda> {
 
   void whenCompleteVerificaSePedidoTemItens() {
     _temItens = _controllerPedido.getPodeFinalizar;
+  }
+
+  void whenCompleteTeste1() {
+    _itensPedidoEQtdes = _controllerEstoque.getItens;
+  }
+
+  void whenCompleteTeste2() {
+    if (_controllerEstoque.qtdeItensSemEstoque > 0) {
+      _permiteFinalizar = false;
+      _controllerEstoque.qtdeItensSemEstoque = 0;
+    } else {
+      _permiteFinalizar = true;
+      _controllerEstoque.qtdeItensSemEstoque = 0;
+    }
   }
 }

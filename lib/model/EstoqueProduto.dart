@@ -14,7 +14,7 @@ class EstoqueProduto {
 //E para cada item nessa colletion terá um snapshot e será possível atribuir isso a um objeto
   EstoqueProduto.buscarFirebase(DocumentSnapshot snapshot) {
     //DocumentSnapshot contém as informações obtidas do firebase
-    id = snapshot.documentID;
+    id = snapshot.id;
     dataAquisicao = snapshot.data()["dtAquisicao"].toDate();
     quantidade = snapshot.data()["quantidade"];
     precoCompra = snapshot.data()["precoCompra"] + 0.0;
